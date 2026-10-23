@@ -812,7 +812,7 @@ def phase_otpfix(verbose=True):
 # (même URL localhost, fraîcheur heuristique). On incrémente SCRIPT_VERSION
 # à chaque changement de comportement de script.js (shim, formulaires…).
 
-SCRIPT_VERSION = "2"
+SCRIPT_VERSION = "3"
 
 RE_SCRIPT_TAG = re.compile(r'(<script\b[^>]*\bsrc="script\.js)(\?[^"]*)?(")')
 
