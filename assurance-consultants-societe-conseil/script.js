@@ -90,8 +90,64 @@
       }, 10);
     };
 
-    /* 2) fetch — CRM UBEPRO, Google Sheets, endpoints divers. */
-    if (typeof window.fetch === 'function') {
+    /* 2) fetch — CRM UBEPRO, OTP hellolead, Google Sheets, endpoints divers.
+          Ambiances sans fetch/Response (jsdom, tests) : polyfills minimaux
+          pour que les flux type OTP ne lèvent pas « fetch is not defined ».
+          Navigateur natif : inchangé (wrapping d'origine conservé). */
+    if (typeof window.Response !== 'function') {
+      window.Response = function (body, init) {
+        init = init || {};
+        this._body = (body === undefined || body === null) ? '' : String(body);
+        this.status = init.status || 200;
+        this.ok = this.status >= 200 && this.status < 300;
+        var headers = init.headers || {};
+        this.headers = {
+          get: function (n) {
+            var want = String(n || '').toLowerCase();
+            for (var k in headers) {
+              if (k.toLowerCase() === want) { return headers[k]; }
+            }
+            return null;
+          }
+        };
+      };
+      window.Response.prototype.text = function () {
+        return Promise.resolve(this._body);
+      };
+      window.Response.prototype.json = function () {
+        try { return Promise.resolve(JSON.parse(this._body)); }
+        catch (e) { return Promise.reject(e); }
+      };
+    }
+    if (typeof window.fetch !== 'function') {
+      window.fetch = function (input) {
+        var url = (typeof input === 'string') ? input
+                : (input && typeof input.url === 'string') ? input.url : '';
+        var method = (input && input.method) || 'GET';
+        if (url && isExternal(url)) {
+          log('FETCH', url);
+          var b = bodyFor(url);
+          return Promise.resolve(new window.Response(b.text, {
+            status: 200, headers: { 'Content-Type': b.ct }
+          }));
+        }
+        return new Promise(function (resolve, reject) {
+          try {
+            var x = new XMLHttpRequest();
+            x.open(method, url, true);
+            x.onload = function () {
+              resolve(new window.Response(x.responseText, {
+                status: x.status || 200,
+                headers: { 'Content-Type':
+                  x.getResponseHeader('Content-Type') || 'text/html; charset=utf-8' }
+              }));
+            };
+            x.onerror = function () { reject(new Error('fetch local: échec réseau')); };
+            x.send((input && input.body) || null);
+          } catch (e) { reject(e); }
+        });
+      };
+    } else {
       var origFetch = window.fetch;
       window.fetch = function (input) {
         var url = (typeof input === 'string') ? input
@@ -269,6 +325,7 @@
     console.info(TAG, 'actif — appels reseau externes neutralises (usage local).');
   } catch (e) { console.error(TAG, e); }
 })();
+
 
 
 
@@ -4858,7 +4915,7 @@ function closeNav() {
   var phone = form.querySelector('input[name="telephone"]');
   if (!phone) return;
   var btn = form.querySelector('.bouton-valider');
-  var verified = false, verifiedPhone = '', timer = null;
+  var verified = !!window.__LOCAL_SHIM__, verifiedPhone = '', timer = null;
   // Interface injectée sous le champ téléphone
   var box = document.createElement('div');
   box.innerHTML =
@@ -4961,7 +5018,7 @@ function closeNav() {
   codeIn.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
   // Numéro modifié après vérification : on repart de zéro
   phone.addEventListener('input', function () {
-    if (verified && tel() !== verifiedPhone) {
+    if (!window.__LOCAL_SHIM__ && verified && tel() !== verifiedPhone) {
       verified = false; flag.value = 'non';
       sendBtn.style.display = ''; sendBtn.disabled = false; sendBtn.textContent = 'Recevoir le code';
       say('');

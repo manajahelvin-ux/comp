@@ -22,6 +22,7 @@ avant import sur le serveur.
 | `cssfix` | `url("https://cdn.prod.website-files.com/…")` dans 2 `style.css` → fichier local `img/employe.png` (visuel identique) | 2 fichiers |
 | `fixrefs` | Réparation des références cassées : 2 assets d'export manquants (picto + icône conso → placeholder SVG `lexus-lbx-2/img/conso-placeholder-local.svg`), vidéos `lbx~3` → `lbx-3` | 4 refs |
 | `nofail` | Effacement des **123 blocs `.w-form-fail`** (message d'échec « Oops! … » de Webflow) : l'erreur ne peut plus s'afficher même par un chemin inattendu ; le bloc succès `.w-form-done` est conservé | 108 `index.html` |
+| `otpfix` | **Bouton « Valider » débloqué** sur les 5 pages assurance à gate SMS OTP (hellolead) : `verified` initialisé via le shim local (le vrai SMS n'arrive jamais hors ligne) + remise à zéro après saisie neutralisée ; le **consentement reste exigé** (radio visible) ; **hors local, le gate OTP réel repart automatiquement** (le shim est inactif → `verified=false`). Shim : polyfills minimaux `fetch`/`Response` pour les environnements sans fetch (jsdom) — navigateur natif inchangé | 5 `script.js` |
 | `cachebust` | `<script src="script.js?v=2">` : versionnage pour invalidation du cache navigateur (sinon un fix JS reste invisible si le navigateur resert l'ancien script) | 131 `index.html` |
 | — | Le shim est **actif uniquement en local** (`localhost`, `127.0.0.1`, `*.e2b.app`, `*.local`, `file://`, ou forçage `localStorage.localShim='1'`) : **le déploiement serveur n'est pas impacté**. | — |
 
@@ -92,6 +93,8 @@ runtime (jsdom), 0 erreur HTTP. Exiger `EXIT=0` avant import.
    - Les blocs *Consent Mode* (déjà présents dans le HTML) sont conservés.
 2. **Shim** : rien à faire — inactif hors local (vérifier le hostname cible ;
    pour le forcer en local : `localStorage.setItem('localShim','1')`).
+   `otpfix` s'auto-restaure aussi hors local : `verified = !!__LOCAL_SHIM__`
+   vaut `false` sur le serveur → vérification SMS OTP réelle réactivée.
 3. **Redirection `site/`** : pointe maintenant vers `../mentions-legales/`
    (relatif, cible locale) — repasser l'URL absolue prod
    (`https://www.comparateurpro.fr/mentions-legales`) si nécessaire.
