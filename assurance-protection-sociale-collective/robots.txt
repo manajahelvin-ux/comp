@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://assurance-protection-sociale-collective.lp.comparateurpro.fr/sitemap.xml

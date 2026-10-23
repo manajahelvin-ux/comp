@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://assurances-professionnelles.lp.comparateurpro.fr/sitemap.xml

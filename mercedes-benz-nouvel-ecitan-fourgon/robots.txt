@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mercedes-benz-nouvel-ecitan-fourgon.lp.comparateurpro.fr/sitemap.xml

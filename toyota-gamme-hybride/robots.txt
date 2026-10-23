@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://toyota-gamme-hybride.lp.comparateurpro.fr/sitemap.xml

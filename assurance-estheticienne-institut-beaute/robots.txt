@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://assurance-estheticienne-institut-beaute.lp.comparateurpro.fr/sitemap.xml

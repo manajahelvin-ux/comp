@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://geo.lp.comparateurpro.fr/sitemap.xml

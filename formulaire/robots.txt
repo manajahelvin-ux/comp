@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://formulaire.lp.comparateurpro.fr/sitemap.xml

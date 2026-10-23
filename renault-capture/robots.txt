@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://renault-capture.lp.comparateurpro.fr/sitemap.xml

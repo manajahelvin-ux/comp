@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://typ-formulaires-panneaux-photovoltaiques.lp.comparateurpro.fr/sitemap.xml

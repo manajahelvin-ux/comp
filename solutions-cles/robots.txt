@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://solutions-cles.lp.comparateurpro.fr/sitemap.xml

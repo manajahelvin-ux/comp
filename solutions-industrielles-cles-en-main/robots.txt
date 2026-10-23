@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://solutions-industrielles-cles-en-main.lp.comparateurpro.fr/sitemap.xml

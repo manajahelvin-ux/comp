@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://energie.lp.comparateurpro.fr/sitemap.xml

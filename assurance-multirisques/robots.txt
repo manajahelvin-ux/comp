@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://assurance-multirisques.lp.comparateurpro.fr/sitemap.xml

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://politique-de-confidentialite-donnees-personnelles.lp.comparateurpro.fr/sitemap.xml

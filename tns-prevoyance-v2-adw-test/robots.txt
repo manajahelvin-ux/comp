@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tns-prevoyance-v2-adw-test.lp.comparateurpro.fr/sitemap.xml

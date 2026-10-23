@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rc-pro-consultant-conseil-adw.lp.comparateurpro.fr/sitemap.xml

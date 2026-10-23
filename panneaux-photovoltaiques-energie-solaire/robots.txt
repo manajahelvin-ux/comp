@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://panneaux-photovoltaiques-energie-solaire.lp.comparateurpro.fr/sitemap.xml

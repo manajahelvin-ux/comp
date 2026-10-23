@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://paritel-vous-rembourse.lp.comparateurpro.fr/sitemap.xml

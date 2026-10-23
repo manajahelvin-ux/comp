@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://edenred-ticket-restaurant-juillet-v1.lp.comparateurpro.fr/sitemap.xml

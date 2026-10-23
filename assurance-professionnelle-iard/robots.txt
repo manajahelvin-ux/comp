@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://assurance-professionnelle-iard.lp.comparateurpro.fr/sitemap.xml

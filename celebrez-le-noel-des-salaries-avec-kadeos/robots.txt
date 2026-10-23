@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://celebrez-le-noel-des-salaries-avec-kadeos.lp.comparateurpro.fr/sitemap.xml

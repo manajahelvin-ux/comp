@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://automobile.lp.comparateurpro.fr/sitemap.xml

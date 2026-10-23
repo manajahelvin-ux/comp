@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ticket-restaurant-septembre-btp.lp.comparateurpro.fr/sitemap.xml

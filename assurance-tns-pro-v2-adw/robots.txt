@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://assurance-tns-pro-v2-adw.lp.comparateurpro.fr/sitemap.xml

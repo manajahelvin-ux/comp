@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://typ-formulaires-caisses-thank-you-page.lp.comparateurpro.fr/sitemap.xml

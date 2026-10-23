@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://typ-formulaires-form-typ-vehicules.lp.comparateurpro.fr/sitemap.xml

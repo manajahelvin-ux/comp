@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://still-manutention.lp.comparateurpro.fr/sitemap.xml

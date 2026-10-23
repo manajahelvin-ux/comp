@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vehicules-de-societe-hd.lp.comparateurpro.fr/sitemap.xml

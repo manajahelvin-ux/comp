@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sage-gestion-de-la-paie-hd.lp.comparateurpro.fr/sitemap.xml

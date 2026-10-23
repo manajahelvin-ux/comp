@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mentions-legales.lp.comparateurpro.fr/sitemap.xml

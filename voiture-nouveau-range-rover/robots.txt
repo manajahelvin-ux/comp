@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://voiture-nouveau-range-rover.lp.comparateurpro.fr/sitemap.xml

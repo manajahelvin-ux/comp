@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://typ-formulaires-typ-energie-form.lp.comparateurpro.fr/sitemap.xml

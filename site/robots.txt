@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://site.lp.comparateurpro.fr/sitemap.xml

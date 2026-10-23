@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lexus-lbx.lp.comparateurpro.fr/sitemap.xml

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://geolocalisation.lp.comparateurpro.fr/sitemap.xml

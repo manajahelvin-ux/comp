@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://radius-remerciement.lp.comparateurpro.fr/sitemap.xml

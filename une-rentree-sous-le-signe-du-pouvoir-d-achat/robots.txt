@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://une-rentree-sous-le-signe-du-pouvoir-d-achat.lp.comparateurpro.fr/sitemap.xml

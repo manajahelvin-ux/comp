@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://mercedes-benz-mercedes-benz-evito.lp.comparateurpro.fr/sitemap.xml

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://vehicules-professionnel-v2.lp.comparateurpro.fr/sitemap.xml

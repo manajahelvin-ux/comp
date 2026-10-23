@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://assurance-consultant-societe-conseil-v2.lp.comparateurpro.fr/sitemap.xml

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://typ-formulaires-typ-caisses-enregistreuse.lp.comparateurpro.fr/sitemap.xml

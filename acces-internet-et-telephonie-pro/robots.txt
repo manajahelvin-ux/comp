@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://acces-internet-et-telephonie-pro.lp.comparateurpro.fr/sitemap.xml

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://form-vehicules-utilitaires.lp.comparateurpro.fr/sitemap.xml

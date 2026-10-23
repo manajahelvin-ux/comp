@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://primagaz-obtenez-votre-gaz-propane-a-prix-fixe.lp.comparateurpro.fr/sitemap.xml

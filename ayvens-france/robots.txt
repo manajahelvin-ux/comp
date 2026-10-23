@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ayvens-france.lp.comparateurpro.fr/sitemap.xml

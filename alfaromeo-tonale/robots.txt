@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://alfaromeo-tonale.lp.comparateurpro.fr/sitemap.xml

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gamme-de-rayonnage-actiflip-hd.lp.comparateurpro.fr/sitemap.xml

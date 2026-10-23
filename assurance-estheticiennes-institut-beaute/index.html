@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Consentement Google : refus par défaut, puis mise à jour depuis les préférences enregistrées. -->
+  <script>
+    (function (w) {
+      w.dataLayer = w.dataLayer || [];
+      w.gtag = w.gtag || function () { w.dataLayer.push(arguments); };
+      var pref = { necessary: true, analytics: false, marketing: false, choiceMade: false };
+      try {
+        var saved = localStorage.getItem('ubeproCookiePreferencesV1');
+        if (saved) {
+          var parsed = JSON.parse(saved);
+          pref = { necessary: true, analytics: parsed.analytics === true, marketing: parsed.marketing === true, choiceMade: true };
+        } else {
+          var legacy = localStorage.getItem('cookiesChoice');
+          if (legacy === 'accept') pref = { necessary: true, analytics: true, marketing: true, choiceMade: true };
+          if (legacy === 'refuse') pref = { necessary: true, analytics: false, marketing: false, choiceMade: true };
+        }
+      } catch (e) {}
+      w.__UBEPRO_COOKIE_PREFERENCES__ = pref;
+      w.gtag('consent', 'default', {
+        analytics_storage: 'denied', ad_storage: 'denied',
+        ad_user_data: 'denied', ad_personalization: 'denied',
+        functionality_storage: 'granted', security_storage: 'granted',
+        wait_for_update: 500
+      });
+      if (pref.choiceMade) {
+        w.gtag('consent', 'update', {
+          analytics_storage: pref.analytics ? 'granted' : 'denied',
+          ad_storage: pref.marketing ? 'granted' : 'denied',
+          ad_user_data: pref.marketing ? 'granted' : 'denied',
+          ad_personalization: pref.marketing ? 'granted' : 'denied'
+        });
+      }
+    })(window);
+  </script>
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-53SH7D7F');</script>
+  <!-- End Google Tag Manager -->
+  <title>Assurances pro pour esthéticiennes, esthéticiens, coiffeurs et instituts de beauté | Comparateurpro</title>
+  <link rel="canonical" href="https://assurance-estheticiennes-institut-beaute.lp.comparateurpro.fr/">
+  <meta property="og:title" content="Assurances pro pour esthéticiennes, esthéticiens, coiffeurs et instituts de beauté | Comparateurpro">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:description" content="">
+  <meta property="og:image" content="https://assurance-estheticiennes-institut-beaute.lp.comparateurpro.fr/img/equipe-institut.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="description" content="Assurances professionnelles pour esthéticiennes et esthéticiens, salons de coiffure et instituts de beauté : comparez les offres RC Pro et multirisque professionnelle, et découvrez santé, prévoyance et retraite, individuelle ou collective. Gratuit et sans engagement.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="img/logo-comparateurpro.png">
+  
+  
+  <link rel="stylesheet" href="style.css">
+  
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-53SH7D7F"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- EN-TÊTE -->
+<header class="site-header">
+  <div class="container nav">
+    <a href="#top" class="logo" aria-label="Comparateurpro, accueil">
+      <img src="img/logo-comparateurpro.png" alt="Comparateurpro" width="160" height="34">
+    </a>
+    <div class="nav-right">
+      <a class="btn btn-primary btn-small" href="#formulaire">Trouver mon assurance</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO + FORMULAIRE -->
+  <section class="hero" id="formulaire">
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <span class="kicker">Esthéticiennes, esthéticiens, salons de coiffure &amp; instituts de beauté</span>
+        <h1>Trouvez le meilleur prix pour votre <span class="accent">protection professionnelle</span>&nbsp;!</h1>
+        <p class="lead">Esthéticiennes et esthéticiens indépendants, salons de coiffure, instituts de beauté ou spas : économisez jusqu'à 35&nbsp;% sur votre assurance.</p>
+        <ul class="checks">
+          <li>Responsabilité civile professionnelle et multirisque en priorité</li>
+          <li>Santé, prévoyance et retraite, individuelle ou collective, également disponibles</li>
+          <li>Gratuit et sans engagement</li>
+        </ul>
+        <a href="#comparateur" class="hero-cta">Recevoir mes propositions gratuitement &rarr;</a>
+        <div class="hero-photo">
+          <img src="img/hero-estheticien-estheticienne.jpg" alt="Esthéticien en tunique blanche et esthéticienne en tunique bleue, souriants dans leur institut de beauté" width="600" height="450" loading="eager">
+        </div>
+      </div>
+
+      <div class="card form-card" id="comparateur">
+        <form id="leadForm" class="multistep" data-api-endpoint="https://mc.hellolead.pro/mon_compte/api/webflow/get_information.php" data-form-id="ADW_LP_ASSURANCE_CONSULTANT" data-sms-endpoint="https://mc.hellolead.pro/mon_compte/api/smspartner/envoi_code_verification.php" data-google-script-url="https://script.google.com/macros/s/AKfycbwrbyCb9-cAmIRPGNvnb-aM-CkhQAerrkfP3_HSw-ewmThxsn4vbZt5daaq2aOnL01a1w/exec" data-api-mode="nocors" data-source="LP ESTHETIQUE" data-scroll-top="true" data-scroll-top-offset="90" novalidate>
+          <div class="progress" aria-hidden="true"><div class="progress-bar" id="bar"></div></div>
+          <p class="step-count" id="stepCount" aria-live="polite">Étape 1 sur 7</p>
+
+          <!-- Suivi : categorie est exclusivement alimentée par le paramètre d'URL correspondant. -->
+          <input type="hidden" name="categorie" data-name="categorie" value="">
+          <input type="hidden" name="autre_info_fj" data-name="autre_info_fj" value="">
+
+          <!-- Étape 1 : assurances et garanties conditionnelles -->
+          <fieldset class="step is-active" data-step="1">
+            <legend>Quels types d’assurances professionnelles recherchez-vous ?</legend>
+            <input type="hidden" name="question_1" data-name="question_1" value="Quels types d’assurances professionnelles recherchez-vous ?">
+            <label class="opt opt-priority">
+              <input type="checkbox" name="reponse_1_1" value="on" data-assurance="rc-pro">
+              <span class="opt-body"><strong>Responsabilité civile professionnelle</strong><small>Soins et prestations : dommages causés à vos clients ou à des tiers</small></span>
+            </label>
+            <input type="hidden" name="reponse_lib_1_1" value="Responsabilité civile professionnelle">
+            <label class="opt opt-priority">
+              <input type="checkbox" name="reponse_1_2" value="on" data-assurance="multirisque">
+              <span class="opt-body"><strong>Multirisque professionnelle</strong><small>Institut ou salon, cabines de soin, matériel et produits, perte d’exploitation</small></span>
+            </label>
+            <input type="hidden" name="reponse_lib_1_2" value="Multirisque professionnelle">
+            <p class="group-label">Protections personnelles</p>
+            <label class="opt">
+              <input type="checkbox" name="reponse_1_3" value="on" data-assurance="sociale-individuelle">
+              <span class="opt-body"><strong>Protection sociale individuelle</strong></span>
+            </label>
+            <input type="hidden" name="reponse_lib_1_3" value="Protection sociale individuelle">
+            <label class="opt">
+              <input type="checkbox" name="reponse_1_4" value="on" data-assurance="sociale-collective">
+              <span class="opt-body"><strong>Protection sociale collective</strong></span>
+            </label>
+            <input type="hidden" name="reponse_lib_1_4" value="Protection sociale collective">
+
+            <div class="conditional-group" data-condition-group="mrp" hidden aria-hidden="true">
+              <input type="hidden" name="question_2" data-name="question_2" value="Quelles garanties recherchez-vous ?">
+              <h3 class="conditional-title">Quelles garanties recherchez-vous ?</h3>
+              <label class="opt"><input type="checkbox" name="reponse_2_1" value="on"><span class="opt-body"><strong>Cyber-risques et protection des données</strong></span></label>
+              <input type="hidden" name="reponse_lib_2_1" value="Cyber-risques et protection des données">
+              <label class="opt"><input type="checkbox" name="reponse_2_2" value="on"><span class="opt-body"><strong>Dommages au matériel informatique</strong></span></label>
+              <input type="hidden" name="reponse_lib_2_2" value="Dommages au matériel informatique">
+              <label class="opt"><input type="checkbox" name="reponse_2_3" value="on"><span class="opt-body"><strong>Perte d’exploitation</strong></span></label>
+              <input type="hidden" name="reponse_lib_2_3" value="Perte d’exploitation">
+              <label class="opt"><input type="checkbox" name="reponse_2_4" value="on"><span class="opt-body"><strong>Vol et vandalisme</strong></span></label>
+              <input type="hidden" name="reponse_lib_2_4" value="Vol et vandalisme">
+              <label class="opt"><input type="checkbox" name="reponse_2_5" value="on"><span class="opt-body"><strong>Incendie et dégâts des eaux</strong></span></label>
+              <input type="hidden" name="reponse_lib_2_5" value="Incendie et dégâts des eaux">
+              <label class="opt"><input type="checkbox" name="reponse_2_6" value="on"><span class="opt-body"><strong>Responsabilité civile exploitation (RCE)</strong></span></label>
+              <input type="hidden" name="reponse_lib_2_6" value="Responsabilité civile exploitation (RCE)">
+              <label class="opt"><input type="checkbox" name="reponse_2_7" value="on"><span class="opt-body"><strong>Protection juridique</strong></span></label>
+              <input type="hidden" name="reponse_lib_2_7" value="Protection juridique">
+              <label class="opt"><input type="checkbox" name="reponse_2_8" value="on" data-autre-mrp="true"><span class="opt-body"><strong>Autre</strong></span></label>
+              <input type="hidden" name="reponse_lib_2_8" value="Autre">
+              <div class="conditional-group conditional-nested" data-condition-group="mrp-autre" hidden aria-hidden="true">
+                <input type="hidden" name="reponse_champ_lib_2_8" value="Autre — précisez">
+                <label class="field">Précisez votre autre garantie
+                  <input type="text" name="reponse_champ_2_8" maxlength="256" placeholder="Votre précision">
+                </label>
+              </div>
+            </div>
+
+            <div class="conditional-group" data-condition-group="psi" hidden aria-hidden="true">
+              <input type="hidden" name="question_5" data-name="question_5" value="Protection sociale individuelle — Quels types de protection recherchez-vous ?">
+              <p class="conditional-kicker">Protection sociale individuelle</p>
+              <h3 class="conditional-title">Quels types de protection recherchez-vous ?</h3>
+              <label class="opt"><input type="checkbox" name="reponse_5_1" value="on"><span class="opt-body"><strong>Complémentaire santé</strong></span></label>
+              <input type="hidden" name="reponse_lib_5_1" value="Complémentaire santé">
+              <label class="opt"><input type="checkbox" name="reponse_5_2" value="on"><span class="opt-body"><strong>Prévoyance</strong></span></label>
+              <input type="hidden" name="reponse_lib_5_2" value="Prévoyance">
+              <label class="opt"><input type="checkbox" name="reponse_5_3" value="on"><span class="opt-body"><strong>Épargne retraite</strong></span></label>
+              <input type="hidden" name="reponse_lib_5_3" value="Épargne retraite">
+            </div>
+
+            <div class="conditional-group" data-condition-group="psc" hidden aria-hidden="true">
+              <input type="hidden" name="question_6" data-name="question_6" value="Protection sociale collective — Quels types de protection recherchez-vous ?">
+              <p class="conditional-kicker">Protection sociale collective</p>
+              <h3 class="conditional-title">Quels types de protection recherchez-vous ?</h3>
+              <label class="opt"><input type="checkbox" name="reponse_6_1" value="on"><span class="opt-body"><strong>Complémentaire santé</strong></span></label>
+              <input type="hidden" name="reponse_lib_6_1" value="Complémentaire santé">
+              <label class="opt"><input type="checkbox" name="reponse_6_2" value="on"><span class="opt-body"><strong>Prévoyance</strong></span></label>
+              <input type="hidden" name="reponse_lib_6_2" value="Prévoyance">
+              <label class="opt"><input type="checkbox" name="reponse_6_3" value="on"><span class="opt-body"><strong>Complémentaire retraite</strong></span></label>
+              <input type="hidden" name="reponse_lib_6_3" value="Complémentaire retraite">
+            </div>
+            <p class="err" data-err></p>
+          </fieldset>
+
+          <!-- Étape 2 : effectif, statut du dirigeant et auto-entrepreneur -->
+          <fieldset class="step" data-step="2">
+            <legend>Quel est l’effectif de votre structure ?</legend>
+            <input type="hidden" name="question_4" data-name="question_4" value="Quel est l’effectif de votre structure ?">
+            <label class="opt"><input type="radio" name="reponse_4" value="0 à 1 personne" data-effectif="0-1" required><span class="opt-body"><strong>0 à 1 personne</strong></span></label>
+            <label class="opt"><input type="radio" name="reponse_4" value="2 à 5 salariés" required><span class="opt-body"><strong>2 à 5 salariés</strong></span></label>
+            <label class="opt"><input type="radio" name="reponse_4" value="6 à 10 salariés" required><span class="opt-body"><strong>6 à 10 salariés</strong></span></label>
+            <label class="opt"><input type="radio" name="reponse_4" value="11 à 20 salariés" required><span class="opt-body"><strong>11 à 20 salariés</strong></span></label>
+            <label class="opt"><input type="radio" name="reponse_4" value="21 à 50 salariés" required><span class="opt-body"><strong>21 à 50 salariés</strong></span></label>
+            <label class="opt"><input type="radio" name="reponse_4" value="Plus de 50 salariés" required><span class="opt-body"><strong>Plus de 50 salariés</strong></span></label>
+
+            <div class="conditional-group" data-condition-group="statut-dirigeant" hidden aria-hidden="true">
+              <input type="hidden" name="question_7" data-name="question_7" value="Quel est votre statut ?">
+              <h3 class="conditional-title">Quel est votre statut de dirigeant ?</h3>
+              <label class="opt"><input type="radio" name="reponse_7" value="Dirigeant salarié" data-statut-dirigeant="salarie" required><span class="opt-body"><strong>Dirigeant salarié</strong></span></label>
+              <label class="opt"><input type="radio" name="reponse_7" value="Dirigeant non salarié (TNS)" data-statut-dirigeant="tns" required><span class="opt-body"><strong>Dirigeant non salarié (TNS)</strong></span></label>
+              <div class="conditional-group conditional-nested" data-condition-group="auto-entrepreneur" hidden aria-hidden="true">
+                <input type="hidden" name="question_3" data-name="question_3" value="Êtes-vous auto-entrepreneur ?">
+                <h3 class="conditional-title">Êtes-vous auto-entrepreneur ?</h3>
+                <label class="opt"><input type="radio" name="reponse_3" value="Oui" required><span class="opt-body"><strong>Oui</strong></span></label>
+                <label class="opt"><input type="radio" name="reponse_3" value="Non" required><span class="opt-body"><strong>Non</strong></span></label>
+              </div>
+            </div>
+            <p class="err" data-err></p>
+          </fieldset>
+
+          <!-- Étape 3 : existence de la société -->
+          <fieldset class="step" data-step="3">
+            <legend>Votre société existe-t-elle déjà ?</legend>
+            <input type="hidden" name="question_8" data-name="question_8" value="Votre société existe-t-elle déjà ?">
+            <label class="opt"><input type="radio" name="reponse_8" value="Société existante" required><span class="opt-body"><strong>Société existante</strong></span></label>
+            <label class="opt"><input type="radio" name="reponse_8" value="Société en cours de création" required><span class="opt-body"><strong>Société en cours de création</strong></span></label>
+            <p class="err" data-err></p>
+          </fieldset>
+
+          <!-- Étape 4 : prénom puis nom -->
+          <fieldset class="step" data-step="4">
+            <legend>Vos coordonnées</legend>
+            <label class="field">Prénom
+              <input type="text" name="prenom" autocomplete="given-name" placeholder="Votre prénom" required>
+            </label>
+            <label class="field">Nom
+              <input type="text" name="nom" autocomplete="family-name" placeholder="Votre nom" required>
+            </label>
+            <p class="err" data-err></p>
+          </fieldset>
+
+          <!-- Étape 5 : adresse e-mail -->
+          <fieldset class="step" data-step="5">
+            <legend>Sur quelle adresse mail souhaitez-vous recevoir vos devis&nbsp;?</legend>
+            <label class="field">Adresse e-mail professionnelle
+              <input type="email" name="mail" autocomplete="email" placeholder="prenom@mon-entreprise.fr" required>
+            </label>
+            <p class="err" data-err></p>
+          </fieldset>
+
+          <!-- Étape 6 : société et code postal -->
+          <fieldset class="step" data-step="6">
+            <legend>Quelle est la société concernée par cette demande&nbsp;?</legend>
+            <label class="field">Nom de la société
+              <input type="text" name="societe" autocomplete="organization" placeholder="Nom de votre institut ou salon" required>
+            </label>
+            <label class="field">Code postal
+              <input type="text" name="code_postal" autocomplete="postal-code" inputmode="numeric" minlength="5" maxlength="5" pattern="[0-9]{5}" placeholder="75000" required>
+            </label>
+            <p class="err" data-err></p>
+          </fieldset>
+
+          <!-- Étape 7 : téléphone et consentement -->
+          <fieldset class="step" data-step="7">
+            <legend>Et enfin, votre numéro de téléphone mobile&nbsp;?</legend>
+            <label class="field">Numéro de téléphone mobile
+              <input type="tel" name="telephone" autocomplete="tel" data-min-character="14" data-phone-autoformat="xx xx xx xx xx" placeholder="06 12 34 56 78" required>
+            </label>
+            <p class="consent-copy">En soumettant ce formulaire, j’accepte que les informations saisies soient exploitées dans le cadre de la relation commerciale qui peut en découler.</p>
+            <div class="consent-options" role="group" aria-label="Consentement">
+              <label><input type="radio" name="consentement" value="oui" required> J’accepte</label>
+              <label><input type="radio" name="consentement" value="non"> Je n’accepte pas</label>
+            </div>
+            <p class="err" data-err></p>
+          </fieldset>
+
+          <!-- Confirmation (affichée après la soumission) -->
+          <div class="step step-done" data-step="done">
+            <div class="thanks">
+              <div class="tick" aria-hidden="true">✓</div>
+              <h3 id="doneTitle">Merci, votre demande a bien été reçue&nbsp;!</h3>
+              <p id="doneMessage">Vous recevrez prochainement un SMS vous précisant quelle(s) compagnie(s) d’assurances prendront contact avec vous.</p>
+            </div>
+          </div>
+
+          <div class="form-nav" id="nav">
+            <button type="button" class="btn btn-ghost" id="prev">Précédent</button>
+            <button type="button" class="btn btn-primary" id="next">Suivant</button>
+          </div>
+          <p class="form-error" id="formError" role="alert"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- PARTENAIRES -->
+  <section class="partners" aria-label="Nos assureurs partenaires">
+    <p class="partners-title">Des assureurs partenaires reconnus</p>
+    <div class="marquee">
+      <div class="marquee-track">
+        <img src="img/allianz.png" alt="Logo Allianz" height="56" loading="lazy">
+        <img src="img/axa.png" alt="Logo AXA" height="56" loading="lazy">
+        <img src="img/generali.png" alt="Logo Generali" height="56" loading="lazy">
+        <img src="img/groupama.png" alt="Logo Groupama" height="56" loading="lazy">
+        <img src="img/hiscox.png" alt="Logo Hiscox" height="56" loading="lazy">
+        <img src="img/macif.png" alt="Logo MACIF" height="56" loading="lazy">
+        <img src="img/mercer.png" alt="Logo Mercer" height="56" loading="lazy">
+        <img src="img/mma.png" alt="Logo MMA" height="56" loading="lazy">
+        <img src="img/allianz.png" alt="" aria-hidden="true" tabindex="-1" height="56" loading="lazy">
+        <img src="img/axa.png" alt="" aria-hidden="true" tabindex="-1" height="56" loading="lazy">
+        <img src="img/generali.png" alt="" aria-hidden="true" tabindex="-1" height="56" loading="lazy">
+        <img src="img/groupama.png" alt="" aria-hidden="true" tabindex="-1" height="56" loading="lazy">
+        <img src="img/hiscox.png" alt="" aria-hidden="true" tabindex="-1" height="56" loading="lazy">
+        <img src="img/macif.png" alt="" aria-hidden="true" tabindex="-1" height="56" loading="lazy">
+        <img src="img/mercer.png" alt="" aria-hidden="true" tabindex="-1" height="56" loading="lazy">
+        <img src="img/mma.png" alt="" aria-hidden="true" tabindex="-1" height="56" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMENT ÇA MARCHE -->
+  <section class="section">
+    <div class="container">
+      <h2 class="center">Comparer et économiser n'a jamais été aussi simple&nbsp;!</h2>
+      <p class="sub">Trois étapes, sans engagement.</p>
+      <div class="grid-3">
+        <article class="box">
+          <span class="num">1</span>
+          <h3>Exprimez vos besoins</h3>
+          <p>Responsabilité civile, multirisque ou protections personnelles : vous choisissez ce qui vous concerne.</p>
+        </article>
+        <article class="box">
+          <span class="num">2</span>
+          <h3>Des compagnies d’assurance vous sont proposées</h3>
+          <p>Nous identifions les compagnies d’assurance disponibles dans votre zone géographique et en mesure d’assurer votre activité. Vous recevez leurs noms par SMS et pouvez refuser la mise en relation.</p>
+        </article>
+        <article class="box">
+          <span class="num">3</span>
+          <h3>Recevez des offres adaptées</h3>
+          <p>Comparez les propositions des assureurs contactés et choisissez librement, ou non.</p>
+        </article>
+      </div>
+      <div class="grid-3 mt">
+        <article class="box box-light"><h3>Gratuit et sans engagement</h3><p>Vous êtes contacté par nos partenaires et libre d'accepter leur offre ou non.</p></article>
+        <article class="box box-light"><h3>Données personnelles protégées</h3><p>Les informations transmises servent uniquement au traitement de votre demande.</p></article>
+        <article class="box box-light"><h3>Experts qualifiés</h3><p>Notre réseau regroupe des assureurs et courtiers spécialisés dans les métiers de l'esthétique et de la beauté.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- GARANTIES PRIORITAIRES -->
+  <section class="section section-alt">
+    <div class="container">
+      <h2 class="center">Vos assurances professionnelles</h2>
+      <p class="sub">Pour une esthéticienne, un esthéticien, un salon de coiffure ou un institut de beauté, la RC Pro et la multirisque sont les deux garanties essentielles : elles couvrent les soins aux clients comme le matériel et le local.</p>
+      <div class="grid-2">
+        <article class="box box-priority">
+          <div class="box-head">
+            <img src="img/icon-rc-pro.png" alt="" width="72" height="72">
+          </div>
+          <h3>Responsabilité civile professionnelle</h3>
+          <p>Elle couvre les conséquences financières d'une erreur, d'un soin inadapté ou d'un préjudice causé à un client dans le cadre de votre prestation.</p>
+          <ul class="checks">
+            <li>Souvent exigée par les clients, les partenaires et les plateformes de réservation</li>
+            <li>Dommages corporels et immatériels : soins, conseils, prestations</li>
+            <li>Défense juridique et frais de procédure selon les formules</li>
+          </ul>
+        </article>
+        <article class="box box-priority">
+          <div class="box-head">
+            <img src="img/icon-multirisque.png" alt="" width="72" height="72">
+          </div>
+          <h3>Multirisque professionnelle</h3>
+          <p>Elle protège votre activité — institut, salon de coiffure ou espace de soins — contre les sinistres matériels et leurs conséquences sur votre chiffre d'affaires.</p>
+          <ul class="checks">
+            <li>Institut, cabines de soin, mobilier et matériel</li>
+            <li>Perte d'exploitation et interruption d'activité</li>
+            <li>Protection juridique du dirigeant et des locaux</li>
+          </ul>
+        </article>
+      </div>
+      <div class="callout">
+        <strong>Astuce :</strong> à domicile ou en espace partagé (shop-in-shop, coworking beauté), la multirisque peut être allégée, mais la RC Pro reste indispensable.
+      </div>
+    </div>
+  </section>
+
+  <!-- ARTICLE + IMAGE SIGNATURE -->
+  <section class="section">
+    <div class="container split">
+      <div class="split-text">
+        <h2>Assurance professionnelle pour esthéticiennes, esthéticiens, salons de coiffure et instituts de beauté : pourquoi est-elle indispensable ?</h2>
+        <p>Esthéticienne ou esthéticien indépendant, responsable d'institut, de salon de coiffure ou de spa, votre valeur repose sur la qualité de vos soins et prestations et sur la confiance de votre clientèle. Un soin inadapté, une réaction cutanée, un rendez-vous manqué ou un matériel défaillant peuvent coûter cher à votre client, et donc à votre activité. Une assurance adaptée transforme ce risque en coût maîtrisé.</p>
+        <h3>Quelles garanties choisir en priorité ?</h3>
+        <ul class="checks">
+          <li><strong>RC Pro :</strong> dommages causés à vos clients ou à des tiers, y compris les préjudices immatériels (soin inadapté, réaction cutanée, retard, perte de chance).</li>
+          <li><strong>Multirisque :</strong> votre institut ou votre salon, vos cabines, votre matériel et vos stocks de produits, ainsi que vos pertes d'exploitation.</li>
+        </ul>
+        
+      </div>
+      <div class="split-img">
+        <img src="img/signature-contrat.jpg" alt="Main signant un contrat d'assurance" width="600" height="400" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- PROTECTIONS PERSONNELLES -->
+  <section class="section section-alt">
+    <div class="container">
+      <h2 class="center">Protégez aussi votre santé et votre avenir</h2>
+      <p class="sub">Votre santé et votre disponibilité sont vos premiers outils de travail. Ces garanties complètent votre protection professionnelle, en contrat individuel ou collectif pour vos salariés.</p>
+      <div class="grid-3">
+        <article class="box">
+          <div class="box-head"><span class="tag">Protection personnelle</span></div>
+          <h3>Complémentaire santé</h3>
+          <p>Consultations, soins spécialisés, optique et dentaire : limitez le reste à charge et reprenez vos rendez-vous plus vite.</p>
+        </article>
+        <article class="box">
+          <div class="box-head"><span class="tag">Protection personnelle</span></div>
+          <h3>Prévoyance</h3>
+          <p>En cas d'arrêt de travail, d'incapacité ou d'invalidité, maintenez un revenu et la continuité de votre activité.</p>
+        </article>
+        <article class="box">
+          <div class="box-head"><span class="tag">Protection personnelle</span></div>
+          <h3>Retraite individuelle ou collective</h3>
+          <p>Préparez votre retraite avec un plan d'épargne retraite (PER) individuel ou un contrat collectif pour votre équipe, dont les versements peuvent être déductibles selon votre situation.</p>
+        </article>
+      </div>
+      <p class="fine center">La déductibilité fiscale dépend de votre statut et de votre régime. Renseignez-vous auprès de votre conseiller.</p>
+    </div>
+  </section>
+
+  <!-- ÉQUIPE / CONSEILLÈRE -->
+  <section class="section">
+    <div class="container split">
+      <div class="split-img">
+        <img src="img/equipe-institut.jpg" alt="Équipe mixte d'un institut de beauté et d'un salon de coiffure en réunion autour d'une table" width="600" height="400" loading="lazy">
+      </div>
+      <div class="split-text">
+        <h2>Un accompagnement pensé pour les esthéticiennes, les esthéticiens et les salons de coiffure</h2>
+        <p>Nos partenaires connaissent les contraintes des instituts, des salons de coiffure, des esthéticiennes et des esthéticiens : clientèle de proximité, réservations en ligne, matériel et produits onéreux, équipes qui grandissent.</p>
+        <p>Vous recevez des propositions claires, comparables, et un conseiller disponible pour répondre à vos questions.</p>
+        <a href="#comparateur" class="btn btn-primary">Trouver mon assurance</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section section-alt">
+    <div class="container narrow">
+      <h2 class="center">Questions fréquentes</h2>
+      <details class="faq-item">
+        <summary>La RC Pro est-elle obligatoire pour une esthéticienne, un esthéticien ou un salon de coiffure ?</summary>
+        <p>Elle n'est pas toujours imposée par la loi, mais elle est souvent exigée par les clients, les partenaires et les plateformes de réservation. Vérifiez les clauses de vos contrats.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Quelle différence entre RC Pro et multirisque ?</summary>
+        <p>La RC Pro couvre les dommages causés à des tiers du fait de vos soins et de vos prestations. La multirisque couvre vos biens (institut, cabines, matériel, produits) et vos pertes d'exploitation.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Puis-je souscrire uniquement santé, prévoyance ou retraite ?</summary>
+        <p>Oui. Vous pouvez choisir une ou plusieurs garanties personnelles, sans souscrire d'assurance professionnelle.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Ma demande est-elle vraiment gratuite ?</summary>
+        <p>Oui. Le service est gratuit et sans engagement. Vous restez libre d'accepter ou de refuser les offres reçues.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section class="final">
+    <div class="container final-grid">
+      <div>
+        <h2>La protection adaptée à votre métier</h2>
+        <p>Accédez à des propositions conçues pour les esthéticiennes, les esthéticiens, les salons de coiffure et les instituts de beauté.</p>
+        <a class="btn btn-yellow" href="#formulaire">Découvrir les offres</a>
+      </div>
+      <img src="img/conseiller.jpg" alt="Conseiller souriant avec une tablette dans un institut de beauté" width="400" height="400" loading="lazy">
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer" id="contact-assureur">
+  <div class="container">
+    <p><strong>Comparateurpro.fr</strong> © 2026</p>
+    <p class="links">
+      <a href="#">Mentions légales</a>
+      <a href="#">Politique de confidentialité</a>
+      <a href="#" id="manageCookies">Gérer les cookies</a>
+    </p>
+  </div>
+</footer>
+
+<!-- BANDEAU COOKIES -->
+<div class="cookies" id="cookies" hidden>
+  <p><strong>Nous utilisons des cookies</strong> pour assurer le bon fonctionnement du site et améliorer votre expérience.</p>
+  <div class="cookie-actions">
+    <button type="button" class="btn btn-ghost btn-small" data-cookie="refuse">Refuser tout</button>
+    <button type="button" class="btn btn-ghost btn-small" data-cookie="prefs">Gérer les préférences</button>
+    <button type="button" class="btn btn-primary btn-small" data-cookie="accept">Accepter tout</button>
+  </div>
+  <div class="cookie-preferences" id="cookiePreferences" hidden>
+    <p>Les cookies nécessaires restent actifs. Choisissez si vous autorisez la mesure d’audience et les cookies marketing.</p>
+    <label><input type="checkbox" id="analyticsCookies"> Mesure d’audience et statistiques</label>
+    <label><input type="checkbox" id="marketingCookies"> Publicité et mesure des campagnes</label>
+    <button type="button" class="btn btn-primary btn-small" data-cookie-save>Enregistrer mes choix</button>
+  </div>
+</div>
+
+
+<script src="script.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://panneaux-photovoltaiques-panneaux-photovoltaique-valider.lp.comparateurpro.fr/sitemap.xml

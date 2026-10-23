@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://radius-telematics-typ.lp.comparateurpro.fr/sitemap.xml

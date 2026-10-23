@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://typ-energie.lp.comparateurpro.fr/sitemap.xml
