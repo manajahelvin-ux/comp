@@ -4,9 +4,10 @@
 
 ## Objectif
 
-Faire tourner les 131 LP **en local** (formulaires, OTP SMS, CRM,
-redirections, polices…) **sans toucher au design ni à `style.css`**, avant
-import sur le serveur.
+Faire tourner les 131 LP **100 % en local** (formulaires, OTP SMS, CRM,
+redirections, polices, iframes de contenu, vidéos, liens, `url()` CSS), **hors
+ligne**, **responsive mobile/tablette/PC**, avec un design visuel inchangé,
+avant import sur le serveur.
 
 ## Ce qui a été fait
 
@@ -16,31 +17,34 @@ import sur le serveur.
 | `html` | Suppression des loaders **GTM/gtag**, iframes `<noscript>` GTM et `<link rel="prefetch">` externes | tous les `index.html` |
 | `js` | Injection du **local-shim** en tête de `script.js` : interception `XMLHttpRequest`, `fetch`, `sendBeacon`, `Image`, injection dynamique `<script>`/`<link>` externes + stub **Turnstile** ; conservation de `dataLayer`/`gtag` en local ; redirection distante de `site/` neutralisée | tous les `script.js` |
 | `fonts` | Génération de `fonts-global.css` + copie des `.woff2` (**@fontsource**) : Poppins, Oswald, PT Serif… ne dépendent plus de `fonts.googleapis.com` | 130 sites |
+| `embeds` | `<iframe>` de contenu → dossiers locaux ; 1 embed YouTube (`primagaz`) → placeholder SVG local ; `data-video-urls` (Webflow) → fichiers `videos/*.mp4` locaux | 13 sites |
+| `links` | `<a href>` externes mappés vers les dossiers locaux correspondants ; coquilles `htpps://` corrigées ; **199 liens `<a>`** pointent vers des dossiers locaux, ancrages/queries conservés | tous les `index.html` |
+| `cssfix` | `url("https://cdn.prod.website-files.com/…")` dans 2 `style.css` → fichier local `img/employe.png` (visuel identique) | 2 fichiers |
+| `fixrefs` | Réparation des références cassées : 2 assets d'export manquants (picto + icône conso → placeholder SVG `lexus-lbx-2/img/conso-placeholder-local.svg`), vidéos `lbx~3` → `lbx-3` | 4 refs |
 | — | Le shim est **actif uniquement en local** (`localhost`, `127.0.0.1`, `*.e2b.app`, `*.local`, `file://`, ou forçage `localStorage.localShim='1'`) : **le déploiement serveur n'est pas impacté**. | — |
 
-**Inchangé (design/CSS)** : `style.css` (0 modification), images, polices déjà
-locales, `<a href>` externes (légal/contact), iframes de contenu (YouTube,
-embeds ubepro/comparateurpro), vidéos hotlinkées, canonical/robots/sitemap.
+**Inchangé** : design et mise en page (seules 2 `url()` CSS de fond ont été
+localisées, visuel identique), images existantes, canonical/robots/sitemap
+(`*.lp.comparateurpro.fr`), `<a href>` externes **informatifs sans dossier
+local** (rgpd/edenred, bloctel, orias, cnil, comparateurpro.fr…), scripts
+données (`data-*` stockant des URL métier non appelées).
 
-## Résidus externes connus (visibles dans le HTML, sans blocage local)
+## Résidus externes restants (visibles dans le HTML, sans blocage local)
 
 | Hôte | Occurrences | Nature |
 |---|---|---|
-| `www.hellolead.pro` | 188 |
-| `www.comparateurpro.fr` | 45 |
+| `www.comparateurpro.fr` | 33 |
 | `rgpd.myedenred.fr` | 18 |
 | `www.w3.org` | 15 |
-| `contact.edenred.fr` | 9 |
-| `www.ubepro.fr` | 9 |
-| `uploads-ssl.webflow.com` | 8 |
+| `www.hellolead.pro` | 10 |
+| `cnil.fr` | 7 |
 | `www.hyundai.com` | 6 |
 | `www.edenred.fr` | 5 |
 | `www.nissan.fr` | 5 |
-| `cnil.fr` | 4 |
-| `www.bloctel.gouv.fr` | 4 |
+| `www.bloctel.gouv.fr` | 5 |
+| `www.ubepro.fr` | 4 |
 | `www.orias.fr` | 3 |
 | `www.toyota.fr` | 3 |
-| `www.ubepro.com` | 2 |
 | `mc.hellolead.pro` | 2 |
 | `www.dacia.fr` | 2 |
 | `lexus.essaiauto.fr` | 2 |
@@ -50,21 +54,33 @@ embeds ubepro/comparateurpro), vidéos hotlinkées, canonical/robots/sitemap.
 | `www.plugandtel.com` | 2 |
 | `tools.google.com` | 2 |
 | `devis.comparateurpro.fr` | 2 |
-| `hellodevis.fr` | 2 |
 | `fbdgiff.r.bh.d.sendibt3.com` | 2 |
 | `www.volvocars.com` | 2 |
 | `script.google.com` | 1 |
 | `www.ayvens.com` | 1 |
 | `www.renault.fr` | 1 |
-| … et 10 autres hôtes (liens `<a>` légal/contact) | — |
+| `service-public.fr` | 1 |
+| `groupe.intuis.fr` | 1 |
+| `www.lexus.fr` | 1 |
+| `orias.fr` | 1 |
+| … et 6 autres hôtes (liens `<a>` légal/contact) | — |
 | `*.lp.comparateurpro.fr` | 134 | canonical/robots/sitemap (SEO, non appelés par le navigateur) |
 
-- `uploads-ssl.webflow.com` (4 sites : canal, lexus-lbx-2, nissan-juke, volvo) :
-  vidéos hotlinkées → **nécessitent internet** (à ré-exporter depuis Webflow).
-- `url("https://cdn.prod.website-files.com/…")` dans `style.css` de
-  `typ-formulaires-securite-thank-you-page` et `typ-formulaires-typ-secu-form`
-  (image de fond, **CSS inchangé volontairement** → fond coloré à la place si
-  hors ligne).
+Tous **appartiennent à des liens hypertexte informatifs** (aucun appel réseau
+par le navigateur hors clic) — les dépendances d'exécution (iframe, vidéo,
+police, `url()`, requêtes XHR/fetch) sont **toutes locales**.
+
+## Vérification (6 contrôles)
+
+```bash
+python3 localize.py report          # régénère ce fichier
+npm install --prefix .verify jsdom  # 1× (moteur de vérification runtime)
+python3 verify-local.py             # refs | external | js-syntax | responsive | runtime | http
+```
+
+Dernier passage (2026-10-23) : **6/6 OK** — 0 référence cassée, 0 dépendance
+externe, 131/131 JS valides, 131/131 responsive, 131/131 pages sans erreur
+runtime (jsdom), 0 erreur HTTP. Exiger `EXIT=0` avant import.
 
 ## Restaurer AVANT l'import serveur
 

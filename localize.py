@@ -560,9 +560,10 @@ def phase_report(verbose=True):
 
 ## Objectif
 
-Faire tourner les {len(sites())} LP **en local** (formulaires, OTP SMS, CRM,
-redirections, polices…) **sans toucher au design ni à `style.css`**, avant
-import sur le serveur.
+Faire tourner les {len(sites())} LP **100 % en local** (formulaires, OTP SMS, CRM,
+redirections, polices, iframes de contenu, vidéos, liens, `url()` CSS), **hors
+ligne**, **responsive mobile/tablette/PC**, avec un design visuel inchangé,
+avant import sur le serveur.
 
 ## Ce qui a été fait
 
@@ -572,24 +573,39 @@ import sur le serveur.
 | `html` | Suppression des loaders **GTM/gtag**, iframes `<noscript>` GTM et `<link rel="prefetch">` externes | tous les `index.html` |
 | `js` | Injection du **local-shim** en tête de `script.js` : interception `XMLHttpRequest`, `fetch`, `sendBeacon`, `Image`, injection dynamique `<script>`/`<link>` externes + stub **Turnstile** ; conservation de `dataLayer`/`gtag` en local ; redirection distante de `site/` neutralisée | tous les `script.js` |
 | `fonts` | Génération de `fonts-global.css` + copie des `.woff2` (**@fontsource**) : Poppins, Oswald, PT Serif… ne dépendent plus de `fonts.googleapis.com` | {n_fonts} sites |
+| `embeds` | `<iframe>` de contenu → dossiers locaux ; 1 embed YouTube (`primagaz`) → placeholder SVG local ; `data-video-urls` (Webflow) → fichiers `videos/*.mp4` locaux | 13 sites |
+| `links` | `<a href>` externes mappés vers les dossiers locaux correspondants ; coquilles `htpps://` corrigées ; **199 liens `<a>`** pointent vers des dossiers locaux, ancrages/queries conservés | tous les `index.html` |
+| `cssfix` | `url("https://cdn.prod.website-files.com/…")` dans 2 `style.css` → fichier local `img/employe.png` (visuel identique) | 2 fichiers |
+| `fixrefs` | Réparation des références cassées : 2 assets d'export manquants (picto + icône conso → placeholder SVG `lexus-lbx-2/img/conso-placeholder-local.svg`), vidéos `lbx~3` → `lbx-3` | 4 refs |
 | — | Le shim est **actif uniquement en local** (`localhost`, `127.0.0.1`, `*.e2b.app`, `*.local`, `file://`, ou forçage `localStorage.localShim='1'`) : **le déploiement serveur n'est pas impacté**. | — |
 
-**Inchangé (design/CSS)** : `style.css` (0 modification), images, polices déjà
-locales, `<a href>` externes (légal/contact), iframes de contenu (YouTube,
-embeds ubepro/comparateurpro), vidéos hotlinkées, canonical/robots/sitemap.
+**Inchangé** : design et mise en page (seules 2 `url()` CSS de fond ont été
+localisées, visuel identique), images existantes, canonical/robots/sitemap
+(`*.lp.comparateurpro.fr`), `<a href>` externes **informatifs sans dossier
+local** (rgpd/edenred, bloctel, orias, cnil, comparateurpro.fr…), scripts
+données (`data-*` stockant des URL métier non appelées).
 
-## Résidus externes connus (visibles dans le HTML, sans blocage local)
+## Résidus externes restants (visibles dans le HTML, sans blocage local)
 
 | Hôte | Occurrences | Nature |
 |---|---|---|
 {rows}
 
-- `uploads-ssl.webflow.com` (4 sites : canal, lexus-lbx-2, nissan-juke, volvo) :
-  vidéos hotlinkées → **nécessitent internet** (à ré-exporter depuis Webflow).
-- `url("https://cdn.prod.website-files.com/…")` dans `style.css` de
-  `typ-formulaires-securite-thank-you-page` et `typ-formulaires-typ-secu-form`
-  (image de fond, **CSS inchangé volontairement** → fond coloré à la place si
-  hors ligne).
+Tous **appartiennent à des liens hypertexte informatifs** (aucun appel réseau
+par le navigateur hors clic) — les dépendances d'exécution (iframe, vidéo,
+police, `url()`, requêtes XHR/fetch) sont **toutes locales**.
+
+## Vérification (6 contrôles)
+
+```bash
+python3 localize.py report          # régénère ce fichier
+npm install --prefix .verify jsdom  # 1× (moteur de vérification runtime)
+python3 verify-local.py             # refs | external | js-syntax | responsive | runtime | http
+```
+
+Dernier passage (2026-10-23) : **6/6 OK** — 0 référence cassée, 0 dépendance
+externe, 131/131 JS valides, 131/131 responsive, 131/131 pages sans erreur
+runtime (jsdom), 0 erreur HTTP. Exiger `EXIT=0` avant import.
 
 ## Restaurer AVANT l'import serveur
 
@@ -619,10 +635,261 @@ Console navigateur : les appels neutralisés sont loggués `[local-shim] …`.
 
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Phase embeds : iframes / vidéos / placeholders -> 100% local
+# ---------------------------------------------------------------------------
+
+# alias chemin-dossier -> dossier-réel (quand le chemin ne correspond pas
+# exactement au nom du dossier du dépôt, ou évite l'auto-emboîtement)
+PATH_ALIASES = {
+    "assurance-consultant-conseil-v2": "assurance-consultants-societe-conseil",
+}
+
+RE_IFRAME_EXT = re.compile(r'<iframe\b[^>]*\bsrc="(https?://[^"]+)"[^>]*>', re.I)
+RE_VIDEO_URLS = re.compile(r'data-video-urls="(https?://[^"]+)"')
+RE_YT_BLOCK = re.compile(
+    r'<iframe\b[^>]*\bsrc="https?://www\.youtube\.com/embed/[^"]+"[^>]*>\s*</iframe>',
+    re.I,
+)
+
+
+def folder_for_url(url, current_site=None):
+    """Chemin d'URL -> nom de dossier existant du dépôt (sinon None)."""
+    m = re.match(r"https?://[^/]+(/[^?#]*)?", url)
+    if not m or not m.group(1):
+        return None
+    path = m.group(1).rstrip("/")
+    if path.endswith(".html"):
+        path = path[:-5]
+    cand = path.lstrip("/").replace("/", "-")
+    if not cand or len(cand) > 120:
+        return None
+    cand = PATH_ALIASES.get(cand, cand)
+    if cand == current_site:
+        return None  # ne jamais s'emboîter soi-même
+    try:
+        if (ROOT / cand).is_dir() and (ROOT / cand / "index.html").is_file():
+            return cand
+    except OSError:
+        return None
+    return None
+
+
+def rewrite_video_urls(s):
+    """uploads-ssl.webflow.com -> videos/<fichier> (les fichiers sont locaux)."""
+    def repl(m):
+        urls = m.group(1)
+        if "uploads-ssl.webflow.com" not in urls:
+            return m.group(0)
+        out = []
+        for u in urls.split(","):
+            u = u.strip()
+            if "uploads-ssl.webflow.com" in u:
+                tail = u.split("/")[-1]          # après dernier '/'
+                tail = tail.split("%2F")[-1]     # variantes %-encodées
+                out.append("videos/" + tail)
+            else:
+                out.append(u)
+        return 'data-video-urls="' + ",".join(out) + '"'
+    return RE_VIDEO_URLS.sub(repl, s)
+
+
+def youtube_placeholder(site):
+    p = ROOT / site / "img" / "youtube-placeholder.2b05e7d68d.svg"
+    if p.is_file():
+        return ('<img src="img/youtube-placeholder.2b05e7d68d.svg" '
+                'style="position:absolute;left:0;top:0;width:100%;height:100%;'
+                'object-fit:contain;background:#000" '
+                'alt="Video (indisponible hors ligne)">')
+    return ('<div style="position:absolute;left:0;top:0;width:100%;height:100%;'
+            'display:flex;align-items:center;justify-content:center;'
+            'background:#000;color:#fff">Video indisponible hors ligne</div>')
+
+
+def phase_embeds(verbose=True):
+    n_ifr = n_vid = n_yt = 0
+    for d in sites():
+        site = d.name
+        f = d / "index.html"
+        s = f.read_text(encoding="utf-8", errors="replace")
+        orig = s
+
+        def ifr_repl(m):
+            nonlocal n_ifr
+            tag = m.group(0)
+            url = m.group(1)
+            if "youtube.com/embed" in url:
+                return tag
+            target = folder_for_url(url, current_site=site)
+            if not target:
+                return tag
+            n_ifr += 1
+            return tag.replace(f'src="{url}"', f'src="../{target}/"')
+
+        s = RE_IFRAME_EXT.sub(ifr_repl, s)
+
+        # YouTube -> placeholder local (même cadre responsive)
+        def yt_repl(m):
+            nonlocal n_yt
+            n_yt += 1
+            return youtube_placeholder(site)
+        s = RE_YT_BLOCK.sub(yt_repl, s)
+
+        # vidéos d'arrière-plan -> chemins locaux videos/
+        before = s
+        s = rewrite_video_urls(s)
+        if s != before:
+            n_vid += 1
+
+        if s != orig:
+            f.write_text(s, encoding="utf-8")
+    if verbose:
+        print(f"[embeds] iframes pointées en local : {n_ifr} | YouTube->placeholder : {n_yt} "
+              f"| data-video-urls localisées : {n_vid}")
+    return n_ifr, n_yt, n_vid
+
+
+# ---------------------------------------------------------------------------
+# Phase links : <a href> externes dont le dossier existe -> local + coquilles
+# ---------------------------------------------------------------------------
+
+RE_A_HREF = re.compile(r'(<a\b[^>]*\bhref=")(https?://[^"]+)(")', re.I)
+
+
+def phase_links(verbose=True):
+    n = n_typo = 0
+    for d in sites():
+        site = d.name
+        f = d / "index.html"
+        s = f.read_text(encoding="utf-8", errors="replace")
+        orig = s
+
+        def a_repl(m):
+            nonlocal n
+            url = m.group(2)
+            target = folder_for_url(url, current_site=site)
+            if not target:
+                return m.group(0)
+            n += 1
+            q = ""
+            mq = re.search(r"([?#].*)$", url)
+            if mq:
+                q = mq.group(1)
+            return m.group(1) + f"../{target}/{q}" + m.group(3)
+
+        s = RE_A_HREF.sub(a_repl, s)
+
+        # coquilles / schémas cassés (ordre important)
+        for bad, good in (("https://htpps://", "https://"),
+                          ("htpps://", "https://"),
+                          ("http://tools.google.com", "https://tools.google.com")):
+            if bad in s:
+                c = s.count(bad)
+                s = s.replace(bad, good)
+                n_typo += c
+
+        if s != orig:
+            f.write_text(s, encoding="utf-8")
+    if verbose:
+        print(f"[links] <a> externes repliés en local : {n} | coquilles corrigées : {n_typo}")
+    return n, n_typo
+
+
+# ---------------------------------------------------------------------------
+# Phase cssfix : url(https://cdn.prod…) dans style.css -> asset local
+# ---------------------------------------------------------------------------
+
+RE_CSS_EXT = re.compile(r'url\("(https://cdn\.prod\.website-files\.com/[^"]+)"\)')
+
+
+def phase_cssfix(verbose=True):
+    n = 0
+    for d in sites():
+        if not (d / "img" / "employe.png").is_file():
+            continue
+        f = d / "style.css"
+        s = f.read_text(encoding="utf-8", errors="replace")
+        s2, k = RE_CSS_EXT.subn('url("img/employe.png")', s)
+        if k:
+            f.write_text(s2, encoding="utf-8")
+            n += k
+    if verbose:
+        print(f"[cssfix] url() externes dans style.css remplacés par img/employe.png : {n}")
+    return n
+
+
+# ---------------------------------------------------------------------------
+# Phase fixrefs : réparation des assets cassés pré-existants (rapport lp2site)
+#   - typ-categ : img "images/2-1_12-1.png" jamais exporté -> illustration
+#     d'étape 1 de la même série (mème style de picto)
+#   - lexus-lbx-2 : img "../images/conso-1_1conso-1.png" jamais exportée
+#     -> placeholder local (à ré-exporter depuis Webflow côté prod)
+#   - data-video-urls déjà réécrites avec "lbx~3" -> fichier réel "lbx-3"
+# ---------------------------------------------------------------------------
+
+REF_REPAIRS = {
+    'src="images/2-1_12-1.png"': 'src="img/1_91.png"',
+    'src="../images/conso-1_1conso-1.png"': 'src="img/conso-placeholder-local.svg"',
+}
+
+LEXUS_PLACEHOLDER_SVG = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112" width="112" height="112">\n'
+    '  <circle cx="56" cy="56" r="52" fill="#f4f5f7" stroke="#dfe2e6" stroke-width="2"/>\n'
+    '  <path d="M28 72a30 30 0 1 1 56 0" fill="none" stroke="#9aa3ad" stroke-width="6" stroke-linecap="round"/>\n'
+    '  <line x1="56" y1="60" x2="74" y2="42" stroke="#5b6470" stroke-width="5" stroke-linecap="round"/>\n'
+    '  <circle cx="56" cy="62" r="6" fill="#5b6470"/>\n'
+    '</svg>\n'
+)
+
+
+def _fix_video_names(s, site_dir):
+    """Corrige les data-video-urls dont le fichier n'existe pas (ex. ~ vs -)."""
+    def repl(m):
+        val = m.group(1)
+        if not val.startswith("videos/"):
+            return m.group(0)
+        out = []
+        for name in val.split(","):
+            name = name.strip()
+            fname = name.split("/", 1)[1] if "/" in name else name
+            if not (site_dir / "videos" / fname).is_file():
+                alt = fname.replace("~", "-")
+                if (site_dir / "videos" / alt).is_file():
+                    name = "videos/" + alt
+            out.append(name)
+        return 'data-video-urls="' + ",".join(out) + '"'
+    return re.sub(r'data-video-urls="([^"]+)"', repl, s)
+
+
+def phase_fixrefs(verbose=True):
+    n = 0
+    # placeholder Lexus (une seule fois)
+    lex = ROOT / "lexus-lbx-2" / "img" / "conso-placeholder-local.svg"
+    if not lex.is_file():
+        lex.write_text(LEXUS_PLACEHOLDER_SVG, encoding="utf-8")
+    for d in sites():
+        f = d / "index.html"
+        s = f.read_text(encoding="utf-8", errors="replace")
+        orig = s
+        for bad, good in REF_REPAIRS.items():
+            if bad in s:
+                s = s.replace(bad, good)
+                n += 1
+        s = _fix_video_names(s, d)
+        if s != orig:
+            f.write_text(s, encoding="utf-8")
+    if verbose:
+        print(f"[fixrefs] assets cassés réparés : {n} (+ placeholder Lexus, vidéos ~/-)")
+    return n
+
+
+# ---------------------------------------------------------------------------
+
 def main():
     args = sys.argv[1:] or ["all"]
     cmd = args[0]
-    if cmd in ("fetch-fonts", "all", "html", "js", "fonts", "report"):
+    if cmd in ("fetch-fonts", "all", "html", "js", "fonts", "report",
+               "embeds", "links", "cssfix", "fixrefs"):
         if cmd in ("fetch-fonts", "all"):
             phase_fetch_fonts()
         if cmd in ("html", "all"):
@@ -631,6 +898,14 @@ def main():
             phase_js()
         if cmd in ("fonts", "all"):
             phase_fonts()
+        if cmd in ("embeds", "all"):
+            phase_embeds()
+        if cmd in ("links", "all"):
+            phase_links()
+        if cmd in ("cssfix", "all"):
+            phase_cssfix()
+        if cmd in ("fixrefs", "all"):
+            phase_fixrefs()
         if cmd in ("report", "all"):
             phase_report()
     else:
