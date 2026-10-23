@@ -1,6 +1,7 @@
-/*__LOCAL_SHIM__ v1 — neutralise les appels réseau externes en environnement
+/*__LOCAL_SHIM__ v2 — neutralise les appels réseau externes en environnement
    local (formulaires Webflow, OTP hellolead, Google Sheets/Apps Script, GTM,
-   Google Fonts, Turnstile, pixels…). Inactif hors local : le déploiement
+   Google Fonts, Turnstile, pixels…) et simule la réussite des soumissions
+   de formulaires (voir section 7). Inactif hors local : le déploiement
    serveur n'est pas impacté. Design et style.css inchangés. */
 (function () {
   'use strict';
@@ -199,9 +200,76 @@
       };
     }
 
+    /* 7) Formulaires : l'export Webflow n'embarque PAS le client de
+          soumission native (API formdata) ; pour un <form> sans action
+          externe, webflow.js enregistre un handler d'échec direct qui
+          affiche « Oops! Something went wrong while submitting the form. »
+          — sans tenter le moindre appel réseau (comportement identique
+          hors local : préexistant à toute neutralisation). On remplace ce
+          handler par une réussite simulée : .w-form-done affiché,
+          data-redirect mappé vers le dossier local quand il existe
+          (table FORM_REDIRECTS générée par localize.py). */
+    var FORM_REDIRECTS = {"https://devis.comparateurpro.fr/sage-gestion-de-paie-typ/": null, "https://www.comparateurpro.fr/alfaromeo/tonale-remerciement": "../alfaromeo-tonale-remerciement/", "https://www.comparateurpro.fr/edenred-typ": "../edenred-typ/", "https://www.comparateurpro.fr/mercedes-vous-remercie": "../mercedes-vous-remercie/", "https://www.comparateurpro.fr/mitsubishi-fuso-remerciement": "../mitsubishi-fuso-remerciement/", "https://www.comparateurpro.fr/panneaux-photovoltaiques/panneaux-photovoltaique-valider": "../panneaux-photovoltaiques-panneaux-photovoltaique-valider/", "https://www.comparateurpro.fr/paritel-typ": "../paritel-typ/", "https://www.comparateurpro.fr/radius-remerciement": "../radius-remerciement/", "https://www.comparateurpro.fr/radius-telematics-typ": "../radius-telematics-typ/"};
+    function localFormSuccess(s) {
+      try {
+        if (s && s.evt && typeof s.evt.preventDefault === 'function') {
+          s.evt.preventDefault();
+        }
+      } catch (e) {}
+      try {
+        if (s) {
+          s.success = true;
+          if (s.redirect) {
+            var to = (FORM_REDIRECTS && FORM_REDIRECTS[s.redirect]) || null;
+            if (to) { location.href = to; return; }
+            if (!/^https?:\/\//i.test(s.redirect)) {
+              location.href = s.redirect; return;
+            }
+            console.info(TAG, 'data-redirect sans equivalent local — succes affiche.');
+          }
+          if (s.done && s.done.length) { s.done.toggle(true); }
+          if (s.fail && s.fail.length) { s.fail.toggle(false); }
+          if (s.form && s.form.length) { s.form.toggle(false); }
+        }
+        console.info(TAG, 'form soumis — succes simule (usage local).');
+      } catch (e) { console.warn(TAG, e); }
+    }
+    (function installLocalForms() {
+      var tries = 0;
+      (function tick() {
+        tries += 1;
+        var $ = window.jQuery, patched = 0;
+        try {
+          if ($ && typeof $.data === 'function') {
+            $('form').each(function () {
+              var datas = $.data(this);
+              if (!datas) { return; }
+              for (var key in datas) {
+                var s = datas[key];
+                if (s && typeof s === 'object' && s.form && s.done &&
+                    typeof s.handler === 'function' &&
+                    s.handler !== localFormSuccess) {
+                  s.handler = localFormSuccess;
+                  patched += 1;
+                }
+              }
+            });
+          }
+        } catch (e) { console.warn(TAG, e); }
+        if (patched) { return; }
+        if (tries < 100 && document.querySelector('form')) {
+          setTimeout(tick, 100);
+        } else if (tries < 100 && document.readyState !== 'complete') {
+          setTimeout(tick, 100);
+        }
+      })();
+    })();
+
     console.info(TAG, 'actif — appels reseau externes neutralises (usage local).');
   } catch (e) { console.error(TAG, e); }
 })();
+
+
 
 /* script.js — jQuery + webflow.js + scripts de la page (ordre conservé,
    isolés par try/catch : un script en échec ne bloque pas les autres) */

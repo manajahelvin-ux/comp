@@ -61,9 +61,10 @@ FONT_NOISE = {
 # Le shim JS injecté en tête de chaque script.js
 # ---------------------------------------------------------------------------
 
-SHIM = r"""/*__LOCAL_SHIM__ v1 — neutralise les appels réseau externes en environnement
+SHIM = r"""/*__LOCAL_SHIM__ v2 — neutralise les appels réseau externes en environnement
    local (formulaires Webflow, OTP hellolead, Google Sheets/Apps Script, GTM,
-   Google Fonts, Turnstile, pixels…). Inactif hors local : le déploiement
+   Google Fonts, Turnstile, pixels…) et simule la réussite des soumissions
+   de formulaires (voir section 7). Inactif hors local : le déploiement
    serveur n'est pas impacté. Design et style.css inchangés. */
 (function () {
   'use strict';
@@ -262,6 +263,71 @@ SHIM = r"""/*__LOCAL_SHIM__ v1 — neutralise les appels réseau externes en env
       };
     }
 
+    /* 7) Formulaires : l'export Webflow n'embarque PAS le client de
+          soumission native (API formdata) ; pour un <form> sans action
+          externe, webflow.js enregistre un handler d'échec direct qui
+          affiche « Oops! Something went wrong while submitting the form. »
+          — sans tenter le moindre appel réseau (comportement identique
+          hors local : préexistant à toute neutralisation). On remplace ce
+          handler par une réussite simulée : .w-form-done affiché,
+          data-redirect mappé vers le dossier local quand il existe
+          (table FORM_REDIRECTS générée par localize.py). */
+    var FORM_REDIRECTS = __FORM_REDIRECTS__;
+    function localFormSuccess(s) {
+      try {
+        if (s && s.evt && typeof s.evt.preventDefault === 'function') {
+          s.evt.preventDefault();
+        }
+      } catch (e) {}
+      try {
+        if (s) {
+          s.success = true;
+          if (s.redirect) {
+            var to = (FORM_REDIRECTS && FORM_REDIRECTS[s.redirect]) || null;
+            if (to) { location.href = to; return; }
+            if (!/^https?:\/\//i.test(s.redirect)) {
+              location.href = s.redirect; return;
+            }
+            console.info(TAG, 'data-redirect sans equivalent local — succes affiche.');
+          }
+          if (s.done && s.done.length) { s.done.toggle(true); }
+          if (s.fail && s.fail.length) { s.fail.toggle(false); }
+          if (s.form && s.form.length) { s.form.toggle(false); }
+        }
+        console.info(TAG, 'form soumis — succes simule (usage local).');
+      } catch (e) { console.warn(TAG, e); }
+    }
+    (function installLocalForms() {
+      var tries = 0;
+      (function tick() {
+        tries += 1;
+        var $ = window.jQuery, patched = 0;
+        try {
+          if ($ && typeof $.data === 'function') {
+            $('form').each(function () {
+              var datas = $.data(this);
+              if (!datas) { return; }
+              for (var key in datas) {
+                var s = datas[key];
+                if (s && typeof s === 'object' && s.form && s.done &&
+                    typeof s.handler === 'function' &&
+                    s.handler !== localFormSuccess) {
+                  s.handler = localFormSuccess;
+                  patched += 1;
+                }
+              }
+            });
+          }
+        } catch (e) { console.warn(TAG, e); }
+        if (patched) { return; }
+        if (tries < 100 && document.querySelector('form')) {
+          setTimeout(tick, 100);
+        } else if (tries < 100 && document.readyState !== 'complete') {
+          setTimeout(tick, 100);
+        }
+      })();
+    })();
+
     console.info(TAG, 'actif — appels reseau externes neutralises (usage local).');
   } catch (e) { console.error(TAG, e); }
 })();
@@ -334,6 +400,33 @@ def phase_html(verbose=True):
 # Phase JS (shim + redirection site/)
 # ---------------------------------------------------------------------------
 
+# Bloc shim complet (v1/v2) : du marqueur de début jusqu'au IIFE de fermeture
+# (le motif `console.error(TAG, …)` n'existe qu'une fois, dans le catch final).
+RE_SHIM_BLOCK = re.compile(
+    r"/\*__LOCAL_SHIM__.*?\} catch \(e\) \{ console\.error\(TAG, e\); \}\n\}\)\(\);\n",
+    re.S,
+)
+
+
+def build_shim():
+    """SHIM courant avec la table FORM_REDIRECTS (data-redirect -> dossier local)."""
+    table = {}
+    for d in sites():
+        h = (d / "index.html").read_text(encoding="utf-8", errors="replace")
+        for url in re.findall(r'data-redirect="([^"]+)"', h):
+            if url in table:
+                continue
+            if re.match(r"^https?://", url):
+                folder = folder_for_url(url)
+                table[url] = ("../" + folder + "/") if folder else None
+            else:
+                table[url] = url  # chemin relatif : tel quel
+    return SHIM.replace(
+        "__FORM_REDIRECTS__",
+        json.dumps(table, ensure_ascii=False, sort_keys=True),
+    )
+
+
 SITE_REDIRECTS = [
     ('window.location.href = "https://www.comparateurpro.fr/mentions-legales";',
      'window.location.href = "mentions-legales/";'),
@@ -344,7 +437,8 @@ SITE_REDIRECTS = [
 
 
 def phase_js(verbose=True):
-    n_shim = n_redir = 0
+    n_shim = n_up = n_redir = 0
+    shim = build_shim()
     for d in sites():
         f = d / "script.js"
         s = f.read_text(encoding="utf-8", errors="replace")
@@ -355,14 +449,23 @@ def phase_js(verbose=True):
                 n_redir += 1
                 changed = True
         if MARKER_SHIM not in s:
-            s = SHIM + "\n" + s
+            s = shim + "\n" + s
             n_shim += 1
             changed = True
+        elif shim not in s:
+            # bloc shim présent mais périmé (v1, ou table FORM_REDIRECTS
+            # obsolète) : remplacer tout le bloc par la version courante
+            m = RE_SHIM_BLOCK.search(s)
+            if m:
+                s = s[:m.start()] + shim + "\n" + s[m.end():]
+                n_up += 1
+                changed = True
         if changed:
             f.write_text(s, encoding="utf-8")
     if verbose:
-        print(f"[js] shim injecté : {n_shim} script.js | redirections neutralisées : {n_redir}")
-    return n_shim, n_redir
+        print(f"[js] shim injecté : {n_shim} script.js | mis à jour : {n_up} | "
+              f"redirections neutralisées : {n_redir}")
+    return n_shim, n_up, n_redir
 
 
 # ---------------------------------------------------------------------------
@@ -571,7 +674,7 @@ avant import sur le serveur.
 |---|---|---|
 | **réparation** | `paritel-typ` et `securite-professionnels` : leur `script.js` d'export contenait **tout le bloc de scripts dupliqué** (~3400 lignes) → `SyntaxError` et JS entièrement mort ; reconstruits sur le modèle des sites frères sains (4288 lignes + shim) | 2 sites |
 | `html` | Suppression des loaders **GTM/gtag**, iframes `<noscript>` GTM et `<link rel="prefetch">` externes | tous les `index.html` |
-| `js` | Injection du **local-shim** en tête de `script.js` : interception `XMLHttpRequest`, `fetch`, `sendBeacon`, `Image`, injection dynamique `<script>`/`<link>` externes + stub **Turnstile** ; conservation de `dataLayer`/`gtag` en local ; redirection distante de `site/` neutralisée | tous les `script.js` |
+| `js` | Injection du **local-shim v2** en tête de `script.js` : interception `XMLHttpRequest`, `fetch`, `sendBeacon`, `Image`, injection dynamique `<script>`/`<link>` externes + stub **Turnstile** ; conservation de `dataLayer`/`gtag` en local ; redirection distante de `site/` neutralisée ; **formulaires** : l'export Webflow n'embarque pas le client de soumission → le handler d'échec (« Oops! Something went wrong… ») est remplacé par une **réussite simulée** (`.w-form-done`), `data-redirect` mappé vers les dossiers locaux (table `FORM_REDIRECTS`) | tous les `script.js` |
 | `fonts` | Génération de `fonts-global.css` + copie des `.woff2` (**@fontsource**) : Poppins, Oswald, PT Serif… ne dépendent plus de `fonts.googleapis.com` | {n_fonts} sites |
 | `embeds` | `<iframe>` de contenu → dossiers locaux ; 1 embed YouTube (`primagaz`) → placeholder SVG local ; `data-video-urls` (Webflow) → fichiers `videos/*.mp4` locaux | 13 sites |
 | `links` | `<a href>` externes mappés vers les dossiers locaux correspondants ; coquilles `htpps://` corrigées ; **199 liens `<a>`** pointent vers des dossiers locaux, ancrages/queries conservés | tous les `index.html` |
