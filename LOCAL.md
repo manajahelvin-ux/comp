@@ -21,6 +21,7 @@ avant import sur le serveur.
 | `links` | `<a href>` externes mappés vers les dossiers locaux correspondants ; coquilles `htpps://` corrigées ; **199 liens `<a>`** pointent vers des dossiers locaux, ancrages/queries conservés | tous les `index.html` |
 | `cssfix` | `url("https://cdn.prod.website-files.com/…")` dans 2 `style.css` → fichier local `img/employe.png` (visuel identique) | 2 fichiers |
 | `fixrefs` | Réparation des références cassées : 2 assets d'export manquants (picto + icône conso → placeholder SVG `lexus-lbx-2/img/conso-placeholder-local.svg`), vidéos `lbx~3` → `lbx-3` | 4 refs |
+| `nofail` | Effacement des **123 blocs `.w-form-fail`** (message d'échec « Oops! … » de Webflow) : l'erreur ne peut plus s'afficher même par un chemin inattendu ; le bloc succès `.w-form-done` est conservé | 108 `index.html` |
 | `cachebust` | `<script src="script.js?v=2">` : versionnage pour invalidation du cache navigateur (sinon un fix JS reste invisible si le navigateur resert l'ancien script) | 131 `index.html` |
 | — | Le shim est **actif uniquement en local** (`localhost`, `127.0.0.1`, `*.e2b.app`, `*.local`, `file://`, ou forçage `localStorage.localShim='1'`) : **le déploiement serveur n'est pas impacté**. | — |
 

@@ -266,12 +266,13 @@ SHIM = r"""/*__LOCAL_SHIM__ v2 — neutralise les appels réseau externes en env
     /* 7) Formulaires : l'export Webflow n'embarque PAS le client de
           soumission native (API formdata) ; pour un <form> sans action
           externe, webflow.js enregistre un handler d'échec direct qui
-          affiche « Oops! Something went wrong while submitting the form. »
-          — sans tenter le moindre appel réseau (comportement identique
-          hors local : préexistant à toute neutralisation). On remplace ce
-          handler par une réussite simulée : .w-form-done affiché,
-          data-redirect mappé vers le dossier local quand il existe
-          (table FORM_REDIRECTS générée par localize.py). */
+          bascule le bloc d'erreur .w-form-fail — sans tenter le moindre
+          appel réseau (comportement identique hors local : préexistant à
+          toute neutralisation). On remplace ce handler par une réussite
+          simulée : .w-form-done affiché, data-redirect mappé vers le
+          dossier local quand il existe (table FORM_REDIRECTS générée par
+          localize.py). Les blocs .w-form-fail ont en outre été supprimés
+          du HTML (phase nofail) : l'erreur ne peut plus s'afficher. */
     var FORM_REDIRECTS = __FORM_REDIRECTS__;
     function localFormSuccess(s) {
       try {
@@ -632,6 +633,84 @@ def phase_fonts(verbose=True):
 
 
 # ---------------------------------------------------------------------------
+# Phase nofail : effacer les blocs d'erreur de formulaire (.w-form-fail)
+# ---------------------------------------------------------------------------
+# « Oops! Something went wrong while submitting the form. » : message d'échec
+# par défaut de Webflow, affiché par le handler native jamais branché sur cet
+# export (shim v2 simule déjà la réussite). On supprime les blocs du HTML pour
+# que l'erreur soit impossible à afficher même par un chemin inattendu.
+# Le bloc .w-form-done (succès) est conservé.
+
+RE_FAIL_OPEN = re.compile(r'<div class="[^"]*\bw-form-fail\b[^"]*"[^>]*>')
+
+
+def _strip_fail_blocks(s):
+    """Retire les <div class="w-form-fail">…</div> (imbrication équilibrée)."""
+    out, pos, n = [], 0, 0
+    while True:
+        m = RE_FAIL_OPEN.search(s, pos)
+        if not m:
+            out.append(s[pos:])
+            break
+        # aller au dernier '</div>' équilibré depuis l'ouverture
+        i, depth, j = m.start(), 0, m.start()
+        end = None
+        while j < len(s):
+            o = s.find("<div", j)
+            c = s.find("</div>", j)
+            if c == -1:
+                break
+            if o != -1 and o < c:
+                depth += 1
+                j = o + 4
+            else:
+                depth -= 1
+                j = c + 6
+                if depth == 0:
+                    end = j
+                    break
+        if end is None:  # malformé : on ne touche pas
+            out.append(s[pos:m.end()])
+            pos = m.end()
+            continue
+        # absorber l'indentation précédente + retour à la ligne suivant
+        k = i
+        while k > pos and s[k - 1] in " \t":
+            k -= 1
+        if k > pos and s[k - 1] == "\n":
+            k -= 1
+            while k > pos and s[k - 1] in " \t":
+                k -= 1
+        e = end
+        while e < len(s) and s[e] in " \t":
+            e += 1
+        if e < len(s) and s[e] == "\n":
+            e += 1
+        out.append(s[pos:k])
+        pos = e
+        n += 1
+    return "".join(out), n
+
+
+def phase_nofail(verbose=True):
+    n_page = n_blk = 0
+    for d in sites():
+        f = d / "index.html"
+        s = f.read_text(encoding="utf-8", errors="replace")
+        if "w-form-fail" not in s:
+            continue
+        s2, c = _strip_fail_blocks(s)
+        if c:
+            s2 = re.sub(r"\n{3,}", "\n\n", s2)
+            f.write_text(s2, encoding="utf-8")
+            n_page += 1
+            n_blk += c
+    if verbose:
+        print(f"[nofail] blocs .w-form-fail effacés : {n_blk} sur {n_page} pages")
+    return n_page, n_blk
+
+
+# ---------------------------------------------------------------------------
 # Phase cachebust : versionner script.js (?v=N) pour invalidation navigateur
 # ---------------------------------------------------------------------------
 # Un fix JS reste invisible si le navigateur sert un script.js en cache
@@ -707,6 +786,7 @@ avant import sur le serveur.
 | `links` | `<a href>` externes mappés vers les dossiers locaux correspondants ; coquilles `htpps://` corrigées ; **199 liens `<a>`** pointent vers des dossiers locaux, ancrages/queries conservés | tous les `index.html` |
 | `cssfix` | `url("https://cdn.prod.website-files.com/…")` dans 2 `style.css` → fichier local `img/employe.png` (visuel identique) | 2 fichiers |
 | `fixrefs` | Réparation des références cassées : 2 assets d'export manquants (picto + icône conso → placeholder SVG `lexus-lbx-2/img/conso-placeholder-local.svg`), vidéos `lbx~3` → `lbx-3` | 4 refs |
+| `nofail` | Effacement des **123 blocs `.w-form-fail`** (message d'échec « Oops! … » de Webflow) : l'erreur ne peut plus s'afficher même par un chemin inattendu ; le bloc succès `.w-form-done` est conservé | 108 `index.html` |
 | `cachebust` | `<script src="script.js?v=2">` : versionnage pour invalidation du cache navigateur (sinon un fix JS reste invisible si le navigateur resert l'ancien script) | 131 `index.html` |
 | — | Le shim est **actif uniquement en local** (`localhost`, `127.0.0.1`, `*.e2b.app`, `*.local`, `file://`, ou forçage `localStorage.localShim='1'`) : **le déploiement serveur n'est pas impacté**. | — |
 
@@ -1020,7 +1100,7 @@ def main():
     args = sys.argv[1:] or ["all"]
     cmd = args[0]
     if cmd in ("fetch-fonts", "all", "html", "js", "fonts", "report",
-               "embeds", "links", "cssfix", "fixrefs", "cachebust"):
+               "embeds", "links", "cssfix", "fixrefs", "cachebust", "nofail"):
         if cmd in ("fetch-fonts", "all"):
             phase_fetch_fonts()
         if cmd in ("html", "all"):
@@ -1031,6 +1111,8 @@ def main():
             phase_fonts()
         if cmd in ("cachebust", "all"):
             phase_cachebust()
+        if cmd in ("nofail", "all"):
+            phase_nofail()
         if cmd in ("embeds", "all"):
             phase_embeds()
         if cmd in ("links", "all"):
