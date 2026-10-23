@@ -632,6 +632,33 @@ def phase_fonts(verbose=True):
 
 
 # ---------------------------------------------------------------------------
+# Phase cachebust : versionner script.js (?v=N) pour invalidation navigateur
+# ---------------------------------------------------------------------------
+# Un fix JS reste invisible si le navigateur sert un script.js en cache
+# (même URL localhost, fraîcheur heuristique). On incrémente SCRIPT_VERSION
+# à chaque changement de comportement de script.js (shim, formulaires…).
+
+SCRIPT_VERSION = "2"
+
+RE_SCRIPT_TAG = re.compile(r'(<script\b[^>]*\bsrc="script\.js)(\?[^"]*)?(")')
+
+
+def phase_cachebust(verbose=True):
+    n = 0
+    for d in sites():
+        f = d / "index.html"
+        s = f.read_text(encoding="utf-8", errors="replace")
+        s2, c = RE_SCRIPT_TAG.subn(
+            lambda m: f'{m.group(1)}?v={SCRIPT_VERSION}{m.group(3)}', s)
+        if s2 != s:
+            f.write_text(s2, encoding="utf-8")
+            n += 1
+    if verbose:
+        print(f"[cachebust] <script src=\"script.js?v={SCRIPT_VERSION}\"> sur {n} pages")
+    return n
+
+
+# ---------------------------------------------------------------------------
 # Phase rapport
 # ---------------------------------------------------------------------------
 
@@ -680,6 +707,7 @@ avant import sur le serveur.
 | `links` | `<a href>` externes mappés vers les dossiers locaux correspondants ; coquilles `htpps://` corrigées ; **199 liens `<a>`** pointent vers des dossiers locaux, ancrages/queries conservés | tous les `index.html` |
 | `cssfix` | `url("https://cdn.prod.website-files.com/…")` dans 2 `style.css` → fichier local `img/employe.png` (visuel identique) | 2 fichiers |
 | `fixrefs` | Réparation des références cassées : 2 assets d'export manquants (picto + icône conso → placeholder SVG `lexus-lbx-2/img/conso-placeholder-local.svg`), vidéos `lbx~3` → `lbx-3` | 4 refs |
+| `cachebust` | `<script src="script.js?v=2">` : versionnage pour invalidation du cache navigateur (sinon un fix JS reste invisible si le navigateur resert l'ancien script) | 131 `index.html` |
 | — | Le shim est **actif uniquement en local** (`localhost`, `127.0.0.1`, `*.e2b.app`, `*.local`, `file://`, ou forçage `localStorage.localShim='1'`) : **le déploiement serveur n'est pas impacté**. | — |
 
 **Inchangé** : design et mise en page (seules 2 `url()` CSS de fond ont été
@@ -992,7 +1020,7 @@ def main():
     args = sys.argv[1:] or ["all"]
     cmd = args[0]
     if cmd in ("fetch-fonts", "all", "html", "js", "fonts", "report",
-               "embeds", "links", "cssfix", "fixrefs"):
+               "embeds", "links", "cssfix", "fixrefs", "cachebust"):
         if cmd in ("fetch-fonts", "all"):
             phase_fetch_fonts()
         if cmd in ("html", "all"):
@@ -1001,6 +1029,8 @@ def main():
             phase_js()
         if cmd in ("fonts", "all"):
             phase_fonts()
+        if cmd in ("cachebust", "all"):
+            phase_cachebust()
         if cmd in ("embeds", "all"):
             phase_embeds()
         if cmd in ("links", "all"):
