@@ -1,3 +1,276 @@
+/*__LOCAL_SHIM__ v2 — neutralise les appels réseau externes en environnement
+   local (formulaires Webflow, OTP hellolead, Google Sheets/Apps Script, GTM,
+   Google Fonts, Turnstile, pixels…) et simule la réussite des soumissions
+   de formulaires (voir section 7). Inactif hors local : le déploiement
+   serveur n'est pas impacté. Design et style.css inchangés. */
+(function () {
+  'use strict';
+  try {
+    if (window.__LOCAL_SHIM__) { return; }
+    var host = location.hostname || '';
+    var forced = false;
+    try { forced = localStorage.getItem('localShim') === '1'; } catch (e) {}
+    var isLocal = !host || host === 'localhost' || host === '127.0.0.1' ||
+      host === '[::1]' || /\.e2b\.app$/.test(host) || /\.local$/.test(host);
+    if (!isLocal && !forced) { return; }
+    window.__LOCAL_SHIM__ = 1;
+
+    var TAG = '[local-shim]';
+
+    /* dataLayer / gtag : on garde la couche de données locale (sans réseau)
+       pour que les scripts de consentement des pages ne cassent pas. */
+    window.dataLayer = window.dataLayer || [];
+    if (typeof window.gtag !== 'function') {
+      window.gtag = function () { (window.dataLayer = window.dataLayer || []).push(arguments); };
+    }
+
+    function isExternal(url) {
+      if (typeof url !== 'string' || url === '') { return false; }
+      try {
+        var u = new URL(url, location.href);
+        if (u.protocol === 'data:' || u.protocol === 'blob:' || u.protocol === 'about:') { return false; }
+        if (u.protocol === 'file:' ) { return false; }
+        return u.origin !== location.origin;
+      } catch (e) { return false; }
+    }
+
+    /* Réponse simulée : JSON « polyvalent » (ok/success/status/resultat)
+       pour les API, script vide pour les .js distants. */
+    function bodyFor(url) {
+      if (/\.js(\?|#|$)|\/gtm\.js|\/gtag\.js|api\.js|typekit|fontdeck|brandjs/i.test(url)) {
+        return { ct: 'application/javascript; charset=utf-8',
+                 text: '/* ' + TAG + ' script externe neutralisé */' };
+      }
+      return { ct: 'application/json; charset=utf-8',
+               text: JSON.stringify({
+                 ok: true, success: true, status: 'ok', statusText: 'ok',
+                 result: 'success', error: false,
+                 message: TAG + ' reponse simulee (usage local)',
+                 redirectTo: null
+               }) };
+    }
+    function log(method, url) {
+      try { console.info(TAG, method, '->', url); } catch (e) {}
+    }
+
+    /* 1) XMLHttpRequest — intercepte $.ajax (jQuery), les appels OTP
+          hellolead, l'API Webflow forms, Apps Script, le CRM UBEPRO… */
+    var origOpen = XMLHttpRequest.prototype.open;
+    var origSend = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.open = function (method, url) {
+      this.__shimUrl = url;
+      this.__shimMethod = method;
+      return origOpen.apply(this, arguments);
+    };
+    XMLHttpRequest.prototype.send = function () {
+      var self = this;
+      if (!isExternal(self.__shimUrl)) { return origSend.apply(this, arguments); }
+      log(self.__shimMethod || 'XHR', self.__shimUrl);
+      var b = bodyFor(String(self.__shimUrl));
+      try {
+        self.getResponseHeader = function (n) {
+          return /content-type/i.test(n || '') ? b.ct : null;
+        };
+        self.getAllResponseHeaders = function () {
+          return 'content-type: ' + b.ct + '\r\n';
+        };
+        Object.defineProperty(self, 'readyState', { configurable: true, value: 4 });
+        Object.defineProperty(self, 'status', { configurable: true, value: 200 });
+        Object.defineProperty(self, 'statusText', { configurable: true, value: 'OK' });
+        Object.defineProperty(self, 'responseText', { configurable: true, value: b.text });
+        Object.defineProperty(self, 'response', { configurable: true, value: b.text });
+        Object.defineProperty(self, 'responseURL', { configurable: true, value: String(self.__shimUrl) });
+      } catch (e) { console.warn(TAG, e); }
+      setTimeout(function () {
+        try {
+          self.dispatchEvent(new Event('readystatechange'));
+          self.dispatchEvent(new Event('load'));
+          self.dispatchEvent(new Event('loadend'));
+        } catch (e) { console.warn(TAG, e); }
+      }, 10);
+    };
+
+    /* 2) fetch — CRM UBEPRO, Google Sheets, endpoints divers. */
+    if (typeof window.fetch === 'function') {
+      var origFetch = window.fetch;
+      window.fetch = function (input) {
+        var url = (typeof input === 'string') ? input
+                : (input && typeof input.url === 'string') ? input.url : null;
+        if (url && isExternal(url)) {
+          log('FETCH', url);
+          var b = bodyFor(url);
+          try {
+            return Promise.resolve(new Response(b.text, {
+              status: 200, headers: { 'Content-Type': b.ct }
+            }));
+          } catch (e) {
+            return Promise.reject(e);
+          }
+        }
+        return origFetch.apply(this, arguments);
+      };
+    }
+
+    /* 3) sendBeacon — pixels & replis « beacon » des API. */
+    if (navigator.sendBeacon) {
+      var origBeacon = navigator.sendBeacon.bind(navigator);
+      navigator.sendBeacon = function (url) {
+        if (isExternal(url)) { log('BEACON', url); return true; }
+        return origBeacon.apply(null, arguments);
+      };
+    }
+
+    /* 4) new Image() / img.src — pixels de tracking (FB, Google Ads…). */
+    try {
+      var srcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
+      if (srcDesc && srcDesc.set) {
+        Object.defineProperty(HTMLImageElement.prototype, 'src', {
+          configurable: true,
+          get: srcDesc.get,
+          set: function (v) {
+            if (isExternal(v)) {
+              log('IMG', v);
+              var self = this;
+              setTimeout(function () {
+                try { self.dispatchEvent(new Event('load')); } catch (e) {}
+              }, 0);
+              return;
+            }
+            return srcDesc.set.call(this, v);
+          }
+        });
+      }
+    } catch (e) {}
+
+    /* 5) Injection dynamique de <script src> / <link rel=stylesheet> externes :
+          Google Fonts (WebFont.load), Turnstile, fontdeck/typekit, brand.js,
+          gtm.js, taggy… On n'attache pas l'élément et on déclenche « load »
+          pour que les callbacks avancent (fontes locales prises en charge par
+          fonts-global.css). */
+    function blockedNode(node) {
+      if (!node || node.nodeType !== 1) { return false; }
+      var t = String(node.tagName || '').toUpperCase();
+      if (t === 'SCRIPT') { return isExternal(node.getAttribute('src')); }
+      if (t === 'LINK') {
+        var rel = String(node.getAttribute('rel') || '').toLowerCase();
+        if (rel.indexOf('stylesheet') >= 0 || rel.indexOf('modulepreload') >= 0 ||
+            rel.indexOf('preload') >= 0 || rel.indexOf('prefetch') >= 0) {
+          return isExternal(node.getAttribute('href'));
+        }
+      }
+      return false;
+    }
+    function fakeLoad(node) {
+      setTimeout(function () {
+        try { node.dispatchEvent(new Event('load')); } catch (e) {}
+      }, 10);
+    }
+    var origAppend = Node.prototype.appendChild;
+    var origInsert = Node.prototype.insertBefore;
+    Node.prototype.appendChild = function (node) {
+      if (blockedNode(node)) {
+        log('SCRIPT/LINK', node.getAttribute('src') || node.getAttribute('href'));
+        fakeLoad(node);
+        return node;
+      }
+      return origAppend.call(this, node);
+    };
+    Node.prototype.insertBefore = function (node, ref) {
+      if (blockedNode(node)) {
+        log('SCRIPT/LINK', node.getAttribute('src') || node.getAttribute('href'));
+        fakeLoad(node);
+        return node;
+      }
+      return origInsert.call(this, node, ref);
+    };
+
+    /* 6) Turnstile (Cloudflare) : stub local — callback immédiat. */
+    if (typeof window.turnstile === 'undefined') {
+      window.turnstile = {
+        render: function (el, opts) {
+          opts = opts || {};
+          if (typeof opts.callback === 'function') {
+            setTimeout(function () { opts.callback('local-shim-token'); }, 0);
+          }
+          return 'local-shim-widget';
+        },
+        remove: function () {}, reset: function () {},
+        getResponse: function () { return 'local-shim-token'; },
+        isExpired: function () { return false; }
+      };
+    }
+
+    /* 7) Formulaires : l'export Webflow n'embarque PAS le client de
+          soumission native (API formdata) ; pour un <form> sans action
+          externe, webflow.js enregistre un handler d'échec direct qui
+          affiche « Oops! Something went wrong while submitting the form. »
+          — sans tenter le moindre appel réseau (comportement identique
+          hors local : préexistant à toute neutralisation). On remplace ce
+          handler par une réussite simulée : .w-form-done affiché,
+          data-redirect mappé vers le dossier local quand il existe
+          (table FORM_REDIRECTS générée par localize.py). */
+    var FORM_REDIRECTS = {"https://devis.comparateurpro.fr/sage-gestion-de-paie-typ/": null, "https://www.comparateurpro.fr/alfaromeo/tonale-remerciement": "../alfaromeo-tonale-remerciement/", "https://www.comparateurpro.fr/edenred-typ": "../edenred-typ/", "https://www.comparateurpro.fr/mercedes-vous-remercie": "../mercedes-vous-remercie/", "https://www.comparateurpro.fr/mitsubishi-fuso-remerciement": "../mitsubishi-fuso-remerciement/", "https://www.comparateurpro.fr/panneaux-photovoltaiques/panneaux-photovoltaique-valider": "../panneaux-photovoltaiques-panneaux-photovoltaique-valider/", "https://www.comparateurpro.fr/paritel-typ": "../paritel-typ/", "https://www.comparateurpro.fr/radius-remerciement": "../radius-remerciement/", "https://www.comparateurpro.fr/radius-telematics-typ": "../radius-telematics-typ/"};
+    function localFormSuccess(s) {
+      try {
+        if (s && s.evt && typeof s.evt.preventDefault === 'function') {
+          s.evt.preventDefault();
+        }
+      } catch (e) {}
+      try {
+        if (s) {
+          s.success = true;
+          if (s.redirect) {
+            var to = (FORM_REDIRECTS && FORM_REDIRECTS[s.redirect]) || null;
+            if (to) { location.href = to; return; }
+            if (!/^https?:\/\//i.test(s.redirect)) {
+              location.href = s.redirect; return;
+            }
+            console.info(TAG, 'data-redirect sans equivalent local — succes affiche.');
+          }
+          if (s.done && s.done.length) { s.done.toggle(true); }
+          if (s.fail && s.fail.length) { s.fail.toggle(false); }
+          if (s.form && s.form.length) { s.form.toggle(false); }
+        }
+        console.info(TAG, 'form soumis — succes simule (usage local).');
+      } catch (e) { console.warn(TAG, e); }
+    }
+    (function installLocalForms() {
+      var tries = 0;
+      (function tick() {
+        tries += 1;
+        var $ = window.jQuery, patched = 0;
+        try {
+          if ($ && typeof $.data === 'function') {
+            $('form').each(function () {
+              var datas = $.data(this);
+              if (!datas) { return; }
+              for (var key in datas) {
+                var s = datas[key];
+                if (s && typeof s === 'object' && s.form && s.done &&
+                    typeof s.handler === 'function' &&
+                    s.handler !== localFormSuccess) {
+                  s.handler = localFormSuccess;
+                  patched += 1;
+                }
+              }
+            });
+          }
+        } catch (e) { console.warn(TAG, e); }
+        if (patched) { return; }
+        if (tries < 100 && document.querySelector('form')) {
+          setTimeout(tick, 100);
+        } else if (tries < 100 && document.readyState !== 'complete') {
+          setTimeout(tick, 100);
+        }
+      })();
+    })();
+
+    console.info(TAG, 'actif — appels reseau externes neutralises (usage local).');
+  } catch (e) { console.error(TAG, e); }
+})();
+
+
+
 /* script.js — jQuery + webflow.js + scripts de la page (ordre conservé,
    isolés par try/catch : un script en échec ne bloque pas les autres) */
 /* chunk 0 */
