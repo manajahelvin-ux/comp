@@ -203,12 +203,13 @@
     /* 7) Formulaires : l'export Webflow n'embarque PAS le client de
           soumission native (API formdata) ; pour un <form> sans action
           externe, webflow.js enregistre un handler d'échec direct qui
-          affiche « Oops! Something went wrong while submitting the form. »
-          — sans tenter le moindre appel réseau (comportement identique
-          hors local : préexistant à toute neutralisation). On remplace ce
-          handler par une réussite simulée : .w-form-done affiché,
-          data-redirect mappé vers le dossier local quand il existe
-          (table FORM_REDIRECTS générée par localize.py). */
+          bascule le bloc d'erreur .w-form-fail — sans tenter le moindre
+          appel réseau (comportement identique hors local : préexistant à
+          toute neutralisation). On remplace ce handler par une réussite
+          simulée : .w-form-done affiché, data-redirect mappé vers le
+          dossier local quand il existe (table FORM_REDIRECTS générée par
+          localize.py). Les blocs .w-form-fail ont en outre été supprimés
+          du HTML (phase nofail) : l'erreur ne peut plus s'afficher. */
     var FORM_REDIRECTS = {"https://devis.comparateurpro.fr/sage-gestion-de-paie-typ/": null, "https://www.comparateurpro.fr/alfaromeo/tonale-remerciement": "../alfaromeo-tonale-remerciement/", "https://www.comparateurpro.fr/edenred-typ": "../edenred-typ/", "https://www.comparateurpro.fr/mercedes-vous-remercie": "../mercedes-vous-remercie/", "https://www.comparateurpro.fr/mitsubishi-fuso-remerciement": "../mitsubishi-fuso-remerciement/", "https://www.comparateurpro.fr/panneaux-photovoltaiques/panneaux-photovoltaique-valider": "../panneaux-photovoltaiques-panneaux-photovoltaique-valider/", "https://www.comparateurpro.fr/paritel-typ": "../paritel-typ/", "https://www.comparateurpro.fr/radius-remerciement": "../radius-remerciement/", "https://www.comparateurpro.fr/radius-telematics-typ": "../radius-telematics-typ/"};
     function localFormSuccess(s) {
       try {
@@ -268,6 +269,7 @@
     console.info(TAG, 'actif — appels reseau externes neutralises (usage local).');
   } catch (e) { console.error(TAG, e); }
 })();
+
 
 
 
