@@ -153,8 +153,64 @@ SHIM = r"""/*__LOCAL_SHIM__ v2 — neutralise les appels réseau externes en env
       }, 10);
     };
 
-    /* 2) fetch — CRM UBEPRO, Google Sheets, endpoints divers. */
-    if (typeof window.fetch === 'function') {
+    /* 2) fetch — CRM UBEPRO, OTP hellolead, Google Sheets, endpoints divers.
+          Ambiances sans fetch/Response (jsdom, tests) : polyfills minimaux
+          pour que les flux type OTP ne lèvent pas « fetch is not defined ».
+          Navigateur natif : inchangé (wrapping d'origine conservé). */
+    if (typeof window.Response !== 'function') {
+      window.Response = function (body, init) {
+        init = init || {};
+        this._body = (body === undefined || body === null) ? '' : String(body);
+        this.status = init.status || 200;
+        this.ok = this.status >= 200 && this.status < 300;
+        var headers = init.headers || {};
+        this.headers = {
+          get: function (n) {
+            var want = String(n || '').toLowerCase();
+            for (var k in headers) {
+              if (k.toLowerCase() === want) { return headers[k]; }
+            }
+            return null;
+          }
+        };
+      };
+      window.Response.prototype.text = function () {
+        return Promise.resolve(this._body);
+      };
+      window.Response.prototype.json = function () {
+        try { return Promise.resolve(JSON.parse(this._body)); }
+        catch (e) { return Promise.reject(e); }
+      };
+    }
+    if (typeof window.fetch !== 'function') {
+      window.fetch = function (input) {
+        var url = (typeof input === 'string') ? input
+                : (input && typeof input.url === 'string') ? input.url : '';
+        var method = (input && input.method) || 'GET';
+        if (url && isExternal(url)) {
+          log('FETCH', url);
+          var b = bodyFor(url);
+          return Promise.resolve(new window.Response(b.text, {
+            status: 200, headers: { 'Content-Type': b.ct }
+          }));
+        }
+        return new Promise(function (resolve, reject) {
+          try {
+            var x = new XMLHttpRequest();
+            x.open(method, url, true);
+            x.onload = function () {
+              resolve(new window.Response(x.responseText, {
+                status: x.status || 200,
+                headers: { 'Content-Type':
+                  x.getResponseHeader('Content-Type') || 'text/html; charset=utf-8' }
+              }));
+            };
+            x.onerror = function () { reject(new Error('fetch local: échec réseau')); };
+            x.send((input && input.body) || null);
+          } catch (e) { reject(e); }
+        });
+      };
+    } else {
       var origFetch = window.fetch;
       window.fetch = function (input) {
         var url = (typeof input === 'string') ? input
@@ -711,6 +767,45 @@ def phase_nofail(verbose=True):
 
 
 # ---------------------------------------------------------------------------
+# Phase otpfix : contournement local du gate OTP SMS (5 pages assurance)
+# ---------------------------------------------------------------------------
+# Ces pages ajoutent un bloc de vérification SMS (mc.hellolead.pro) qui ne
+# rend le bouton « Valider » actif qu'après vérification d'un code à 6
+# chiffres — impossible hors ligne (le SMS n'arrive jamais ; en jsdom, le
+# fetch manquant plantait avec « fetch is not defined »). En local, le shim
+# simule déjà les réponses de l'API : on initialise `verified` à l'état du
+# shim et on neutralise la remise à zéro après saisie du numéro. Hors local
+# (shim inactif) : verified=false → gate OTP réel actif à l'import serveur,
+# aucune restauration manuelle nécessaire. Le consentement (radio visible)
+# reste exigé.
+
+OTP_GATE_INIT = "var verified = false, verifiedPhone = '', timer = null;"
+OTP_GATE_INIT_LOCAL = ("var verified = !!window.__LOCAL_SHIM__, "
+                       "verifiedPhone = '', timer = null;")
+OTP_GATE_RESET = "if (verified && tel() !== verifiedPhone) {"
+OTP_GATE_RESET_LOCAL = ("if (!window.__LOCAL_SHIM__ && verified && "
+                        "tel() !== verifiedPhone) {")
+
+
+def phase_otpfix(verbose=True):
+    n = 0
+    for d in sites():
+        f = d / "script.js"
+        s = f.read_text(encoding="utf-8", errors="replace")
+        if OTP_GATE_INIT not in s:
+            continue
+        s = s.replace(OTP_GATE_INIT, OTP_GATE_INIT_LOCAL, 1)
+        if OTP_GATE_RESET in s:
+            s = s.replace(OTP_GATE_RESET, OTP_GATE_RESET_LOCAL, 1)
+        f.write_text(s, encoding="utf-8")
+        n += 1
+    if verbose:
+        print(f"[otpfix] gate OTP contourné en local : {n} script.js "
+              f"(verified via shim, reset neutralisé ; consentement toujours exigé)")
+    return n
+
+
+# ---------------------------------------------------------------------------
 # Phase cachebust : versionner script.js (?v=N) pour invalidation navigateur
 # ---------------------------------------------------------------------------
 # Un fix JS reste invisible si le navigateur sert un script.js en cache
@@ -787,6 +882,7 @@ avant import sur le serveur.
 | `cssfix` | `url("https://cdn.prod.website-files.com/…")` dans 2 `style.css` → fichier local `img/employe.png` (visuel identique) | 2 fichiers |
 | `fixrefs` | Réparation des références cassées : 2 assets d'export manquants (picto + icône conso → placeholder SVG `lexus-lbx-2/img/conso-placeholder-local.svg`), vidéos `lbx~3` → `lbx-3` | 4 refs |
 | `nofail` | Effacement des **123 blocs `.w-form-fail`** (message d'échec « Oops! … » de Webflow) : l'erreur ne peut plus s'afficher même par un chemin inattendu ; le bloc succès `.w-form-done` est conservé | 108 `index.html` |
+| `otpfix` | **Bouton « Valider » débloqué** sur les 5 pages assurance à gate SMS OTP (hellolead) : `verified` initialisé via le shim local (le vrai SMS n'arrive jamais hors ligne) + remise à zéro après saisie neutralisée ; le **consentement reste exigé** (radio visible) ; **hors local, le gate OTP réel repart automatiquement** (le shim est inactif → `verified=false`). Shim : polyfills minimaux `fetch`/`Response` pour les environnements sans fetch (jsdom) — navigateur natif inchangé | 5 `script.js` |
 | `cachebust` | `<script src="script.js?v=2">` : versionnage pour invalidation du cache navigateur (sinon un fix JS reste invisible si le navigateur resert l'ancien script) | 131 `index.html` |
 | — | Le shim est **actif uniquement en local** (`localhost`, `127.0.0.1`, `*.e2b.app`, `*.local`, `file://`, ou forçage `localStorage.localShim='1'`) : **le déploiement serveur n'est pas impacté**. | — |
 
@@ -826,6 +922,8 @@ runtime (jsdom), 0 erreur HTTP. Exiger `EXIT=0` avant import.
    - Les blocs *Consent Mode* (déjà présents dans le HTML) sont conservés.
 2. **Shim** : rien à faire — inactif hors local (vérifier le hostname cible ;
    pour le forcer en local : `localStorage.setItem('localShim','1')`).
+   `otpfix` s'auto-restaure aussi hors local : `verified = !!__LOCAL_SHIM__`
+   vaut `false` sur le serveur → vérification SMS OTP réelle réactivée.
 3. **Redirection `site/`** : pointe maintenant vers `../mentions-legales/`
    (relatif, cible locale) — repasser l'URL absolue prod
    (`https://www.comparateurpro.fr/mentions-legales`) si nécessaire.
@@ -1100,7 +1198,8 @@ def main():
     args = sys.argv[1:] or ["all"]
     cmd = args[0]
     if cmd in ("fetch-fonts", "all", "html", "js", "fonts", "report",
-               "embeds", "links", "cssfix", "fixrefs", "cachebust", "nofail"):
+               "embeds", "links", "cssfix", "fixrefs", "cachebust", "nofail",
+               "otpfix"):
         if cmd in ("fetch-fonts", "all"):
             phase_fetch_fonts()
         if cmd in ("html", "all"):
@@ -1113,6 +1212,8 @@ def main():
             phase_cachebust()
         if cmd in ("nofail", "all"):
             phase_nofail()
+        if cmd in ("otpfix", "all"):
+            phase_otpfix()
         if cmd in ("embeds", "all"):
             phase_embeds()
         if cmd in ("links", "all"):
